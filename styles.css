@@ -1,0 +1,160 @@
+/* =========================
+   Musicar-style UI (editable)
+   ========================= */
+
+:root{
+  /* Ajusta estos 3 a los HEX oficiales del manual si los tienes */
+  --ms-primary: #004080;      /* Azul institucional */
+  --ms-secondary: #29a329;    /* Verde acento */
+  --ms-accent: #ff3300;       /* Acento (alerta/acción) */
+
+  /* Neutros (tema oscuro premium) */
+  --ms-bg: #070b12;           /* fondo general */
+  --ms-surface: #0b1220;      /* contenedores */
+  --ms-card: #0e1830;         /* tarjetas */
+  --ms-card-2: #0b1426;       /* tarjetas hover / variación */
+  --ms-text: #eef2ff;         /* texto principal */
+  --ms-muted: rgba(238,242,255,.72); /* texto secundario */
+  --ms-line: rgba(255,255,255,.10);  /* bordes */
+
+  --ms-radius: 14px;
+  --ms-shadow: 0 12px 30px rgba(0,0,0,.40);
+}
+
+*{ box-sizing: border-box; }
+
+html, body{ height: 100%; }
+
+body{
+  margin: 0;
+  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  color: var(--ms-text);
+  background:
+    radial-gradient(1000px 500px at 15% 0%, rgba(0,64,128,.20), transparent 60%),
+    radial-gradient(900px 500px at 90% 10%, rgba(41,163,41,.14), transparent 60%),
+    linear-gradient(180deg, var(--ms-bg), #05070c);
+}
+
+/* Header */
+header{
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  padding: 18px 20px;
+  text-align: center;
+  background: rgba(7,11,18,.78);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--ms-line);
+}
+
+header h1{
+  margin: 0;
+  font-size: 20px;
+  letter-spacing: .2px;
+  font-weight: 800;
+}
+
+header p{
+  margin: 6px 0 0;
+  color: var(--ms-muted);
+  font-size: 12px;
+}
+
+/* Input (buscador) */
+header input{
+  margin-top: 12px;
+  padding: 12px 14px;
+  width: 520px;
+  max-width: 92%;
+  border-radius: 999px;
+  border: 1px solid var(--ms-line);
+  outline: none;
+  color: var(--ms-text);
+  background: rgba(14,24,48,.70);
+  box-shadow: 0 0 0 0 rgba(0,64,128,0);
+  transition: border-color .15s ease, box-shadow .15s ease, background .15s ease;
+}
+
+header input::placeholder{
+  color: rgba(238,242,255,.45);
+}
+
+header input:focus{
+  border-color: rgba(0,64,128,.65);
+  box-shadow: 0 0 0 5px rgba(0,64,128,.18);
+  background: rgba(14,24,48,.82);
+}
+
+/* Layout grid */
+#channels{
+  padding: 22px 20px 28px;
+  max-width: 1220px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 16px;
+}
+
+@media (max-width: 420px){
+  #channels{ grid-template-columns: 1fr; }
+}
+
+/* Card */
+.channel{
+  position: relative;
+  background: linear-gradient(180deg, rgba(14,24,48,.95), rgba(11,20,38,.78));
+  border: 1px solid var(--ms-line);
+  border-radius: var(--ms-radius);
+  padding: 14px;
+  box-shadow: var(--ms-shadow);
+  transition: transform .12s ease, border-color .12s ease, background .12s ease;
+}
+
+.channel:hover{
+  transform: translateY(-2px);
+  border-color: rgba(0,64,128,.35);
+  background: linear-gradient(180deg, rgba(14,24,48,.98), rgba(11,20,38,.88));
+}
+
+/* Título de cliente */
+.channel h3{
+  margin: 0 0 10px 0;
+  font-size: 13px;
+  line-height: 1.25;
+  font-weight: 700;
+  letter-spacing: .2px;
+}
+
+/* Separador sutil (opcional) */
+.channel h3::after{
+  content: "";
+  display: block;
+  margin-top: 10px;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(0,64,128,.55), rgba(41,163,41,.35), transparent);
+  opacity: .55;
+}
+
+/* Audio player */
+audio{
+  width: 100%;
+  height: 38px;
+  border-radius: 10px;
+  outline: none;
+  filter: saturate(1.05);
+}
+
+/* Footer */
+footer{
+  text-align: center;
+  padding: 18px 15px 24px;
+  font-size: 12px;
+  color: var(--ms-muted);
+  border-top: 1px solid var(--ms-line);
+  background: rgba(7,11,18,.60);
+}
+
+/* Accesibilidad */
+@media (prefers-reduced-motion: reduce){
+  *{ transition: none !important; }
+}
