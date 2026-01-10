@@ -29,51 +29,60 @@
       opacity:.75;
       letter-spacing:.6px;
       text-transform: uppercase;
-      margin-bottom:8px;
+      margin-bottom:10px;
       font-weight:800;
     }
 
-    /* Compactar Now Playing */
-    .rbcloud_nowplaying{
-      gap:10px !important;
+    /* NOW PLAYING: solo texto, grande */
+    .npText #npArtist{
+      font-size:14px;
+      font-weight:900;
+      line-height:1.2;
+      margin:0 0 4px;
     }
-    .rbcloud_nowplaying img{
-      width:40px !important;
-      height:40px !important;
-      border-radius:8px;
-      border:1px solid rgba(255,255,255,.15);
-    }
-    .rbcloud_nowplaying div{
-      font-size:13px !important;
+    .npText #npTitle{
+      font-size:13px;
+      opacity:.92;
+      line-height:1.2;
+      margin:0;
     }
 
-    /* Ocultar carátula grande */
-    a[href*="artwork"] img{
+    /* Ocultar cualquier carátula que el script inserte */
+    .rbcloud_nowplaying a,
+    .rbcloud_nowplaying img{
       display:none !important;
     }
 
-    /* Recientes como playlist */
+    /* RECENTS (10): modo playlist */
     .rbcloud_recenttracks{
-      margin-top:8px;
+      margin:0;
+      padding:0;
     }
     .rbcloud_recent_track{
       display:block !important;
+      margin:0 !important;
       padding:6px 0;
       border-bottom:1px solid rgba(255,255,255,.08);
     }
     .rbcloud_recent_track:last-child{
       border-bottom:0;
     }
+
+    /* Ocultar carátula en recientes */
     .rbcloud_recent_track_cover{
       display:none !important;
     }
+
     .rbcloud_recent_artist{
-      font-weight:800 !important;
+      font-weight:900 !important;
       font-size:12px;
+      line-height:1.15;
     }
     .rbcloud_recent_title{
       font-size:12px;
-      opacity:.9;
+      opacity:.92;
+      line-height:1.15;
+      margin-top:2px;
     }
   </style>
 </head>
@@ -81,26 +90,35 @@
 <body>
   <div class="wrap">
 
+    <!-- NOW PLAYING (texto) -->
     <div class="card">
       <div class="label">Ahora sonando</div>
 
-      <!-- RadioBOSS Now Playing -->
-      <div class="rbcloud_nowplaying">
-        <div id="np"></div>
+      <!-- RadioBOSS requiere estos IDs exactos para widNow -->
+      <div class="npText">
+        <div id="npArtist">Cargando…</div>
+        <div id="npTitle">—</div>
+      </div>
+
+      <!-- Contenedor real que RadioBOSS llena (oculto) -->
+      <div class="rbcloud_nowplaying" style="display:none;">
+        <div id="rb_np_mount"></div>
       </div>
     </div>
 
+    <!-- RECENTS -->
     <div class="card">
       <div class="label">Recientes (10)</div>
 
-      <!-- RadioBOSS Recent -->
-      <div class="rbcloud_recenttracks" id="recent" data-cnt="10"></div>
+      <!-- RadioBOSS llenará este contenedor con widRecent -->
+      <div class="rbcloud_recenttracks" id="rb_recent_mount" data-cnt="10"></div>
     </div>
 
   </div>
 
   <script>
     const p = new URLSearchParams(location.search);
+
     const host = p.get("host");
     const u = p.get("u");
     const widNow = p.get("widNow");
@@ -114,8 +132,46 @@
       document.body.appendChild(s);
     }
 
+    // Validación
+    if (!host || !u || !widNow || !widRecent) {
+      document.body.innerHTML = "<div style='padding:12px;font-family:Arial;color:#e5e7eb'>Faltan parámetros (host/u/widNow/widRecent).</div>";
+      throw new Error("Missing params");
+    }
+
+    // 1) Crear los IDs EXACTOS que RadioBOSS llena
+    // Now Playing: rbcloud_np_a{widNow}, rbcloud_np_t{widNow} (+ cover opcional)
+    const artistHidden = document.createElement("div");
+    artistHidden.id = `rbcloud_np_a${widNow}`;
+    const titleHidden = document.createElement("div");
+    titleHidden.id = `rbcloud_np_t${widNow}`;
+    titleHidden.textContent = "...";
+
+    // Montarlos en el DOM (ocultos) para que el script los encuentre
+    const npMount = document.getElementById("rb_np_mount");
+    npMount.appendChild(artistHidden);
+    npMount.appendChild(titleHidden);
+
+    // Recientes: rbcloud_recent{widRecent}
+    const recentMount = document.getElementById("rb_recent_mount");
+    recentMount.id = `rbcloud_recent${widRecent}`; // ESTE ID es obligatorio para recent.js
+
+    // 2) Inyectar scripts oficiales
     inject(`${host}/w/nowplaying2.js?u=${u}&wid=${widNow}${tf ? `&tf=${tf}` : ""}`);
     inject(`${host}/w/recent.js?u=${u}&wid=${widRecent}&v=2${tf ? `&tf=${tf}` : ""}`);
+
+    // 3) Reflejar el texto al UI visible
+    function sync(){
+      const a = document.getElementById(`rbcloud_np_a${widNow}`);
+      const t = document.getElementById(`rbcloud_np_t${widNow}`);
+      const artist = (a && a.textContent || "").trim();
+      const title  = (t && t.textContent || "").trim();
+
+      if (artist) document.getElementById("npArtist").textContent = artist;
+      if (title && title !== "...") document.getElementById("npTitle").textContent = title;
+    }
+
+    setInterval(sync, 800);
+    sync();
   </script>
 </body>
 </html>
