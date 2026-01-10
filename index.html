@@ -1,41 +1,26 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Monitor de Canales Musicales | Musicar</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
-  <!-- Estilos -->
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
 
-  <!-- ================= HEADER ================= -->
   <header>
-    <img src="Logo_Musicar.png" alt="Musicar - Conecta los sentidos" class="logo">
-
+    <img class="logo" src="Logo_Musicar.png" alt="Musicar - Conectando sentidos" />
     <h1>Monitor de Canales Musicales</h1>
-    <p>Voice Experience · Musicar</p>
-
-    <input
-      type="text"
-      id="search"
-      placeholder="Buscar cliente..."
-      autocomplete="off"
-    />
+    <p>Voice Experience - Musicar</p>
+    <input id="search" type="text" placeholder="Buscar cliente..." autocomplete="off" />
   </header>
 
-  <!-- ================= CONTENIDO ================= -->
   <main>
-    <div id="channels"></div>
+    <section id="channels"></section>
   </main>
 
-  <!-- ================= FOOTER ================= -->
-  <footer>
-    © Musicar · Conectando sentidos
-  </footer>
+  <footer>© Musicar - Conectando sentidos</footer>
 
-  <!-- Script principal -->
   <script src="app.js"></script>
 </body>
 </html>
