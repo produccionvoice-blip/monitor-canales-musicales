@@ -1,160 +1,183 @@
-/* =========================
-   Musicar-style UI (editable)
-   ========================= */
+/* =========================================================
+   styles.css – Monitor de Canales Musicales | Musicar
+   ========================================================= */
 
-:root{
-  /* Ajusta estos 3 a los HEX oficiales del manual si los tienes */
-  --ms-primary: #004080;      /* Azul institucional */
-  --ms-secondary: #29a329;    /* Verde acento */
-  --ms-accent: #ff3300;       /* Acento (alerta/acción) */
-
-  /* Neutros (tema oscuro premium) */
-  --ms-bg: #070b12;           /* fondo general */
-  --ms-surface: #0b1220;      /* contenedores */
-  --ms-card: #0e1830;         /* tarjetas */
-  --ms-card-2: #0b1426;       /* tarjetas hover / variación */
-  --ms-text: #eef2ff;         /* texto principal */
-  --ms-muted: rgba(238,242,255,.72); /* texto secundario */
-  --ms-line: rgba(255,255,255,.10);  /* bordes */
-
-  --ms-radius: 14px;
-  --ms-shadow: 0 12px 30px rgba(0,0,0,.40);
+/* ---------- Reset ---------- */
+* {
+  box-sizing: border-box;
 }
 
-*{ box-sizing: border-box; }
-
-html, body{ height: 100%; }
-
-body{
+html, body {
   margin: 0;
-  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-  color: var(--ms-text);
-  background:
-    radial-gradient(1000px 500px at 15% 0%, rgba(0,64,128,.20), transparent 60%),
-    radial-gradient(900px 500px at 90% 10%, rgba(41,163,41,.14), transparent 60%),
-    linear-gradient(180deg, var(--ms-bg), #05070c);
+  padding: 0;
+  height: 100%;
+  background: #0f172a;
+  color: #e5e7eb;
+  font-family: Arial, Helvetica, sans-serif;
 }
 
-/* Header */
-header{
-  position: sticky;
-  top: 0;
-  z-index: 10;
-  padding: 18px 20px;
+/* ---------- Header ---------- */
+header {
+  background: #020617;
+  padding: 22px 16px 26px;
   text-align: center;
-  background: rgba(7,11,18,.78);
-  backdrop-filter: blur(10px);
-  border-bottom: 1px solid var(--ms-line);
+  border-bottom: 1px solid rgba(255,255,255,.08);
 }
 
-header h1{
+/* Logo Musicar */
+.logo {
+  display: block;
+  margin: 0 auto 12px;
+  max-width: 220px;
+  width: 100%;
+  height: auto;
+}
+
+/* Título */
+header h1 {
   margin: 0;
   font-size: 20px;
-  letter-spacing: .2px;
-  font-weight: 800;
+  font-weight: 700;
+  letter-spacing: 0.4px;
 }
 
-header p{
-  margin: 6px 0 0;
-  color: var(--ms-muted);
-  font-size: 12px;
+/* Subtítulo */
+header p {
+  margin: 6px 0 14px;
+  font-size: 13px;
+  opacity: 0.75;
 }
 
-/* Input (buscador) */
-header input{
-  margin-top: 12px;
-  padding: 12px 14px;
-  width: 520px;
-  max-width: 92%;
-  border-radius: 999px;
-  border: 1px solid var(--ms-line);
+/* ---------- Buscador ---------- */
+header input {
+  padding: 10px 12px;
+  width: 320px;
+  max-width: 90%;
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,.15);
+  background: #020617;
+  color: #e5e7eb;
+  font-size: 13px;
+}
+
+header input::placeholder {
+  color: rgba(255,255,255,.45);
+}
+
+header input:focus {
   outline: none;
-  color: var(--ms-text);
-  background: rgba(14,24,48,.70);
-  box-shadow: 0 0 0 0 rgba(0,64,128,0);
-  transition: border-color .15s ease, box-shadow .15s ease, background .15s ease;
+  border-color: #38bdf8;
 }
 
-header input::placeholder{
-  color: rgba(238,242,255,.45);
+/* ---------- Contenedor principal ---------- */
+main {
+  padding: 20px;
 }
 
-header input:focus{
-  border-color: rgba(0,64,128,.65);
-  box-shadow: 0 0 0 5px rgba(0,64,128,.18);
-  background: rgba(14,24,48,.82);
-}
-
-/* Layout grid */
-#channels{
-  padding: 22px 20px 28px;
-  max-width: 1220px;
-  margin: 0 auto;
+/* ---------- Grid de canales ---------- */
+#channels {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
   gap: 16px;
 }
 
-@media (max-width: 420px){
-  #channels{ grid-template-columns: 1fr; }
+/* ---------- Tarjeta de canal ---------- */
+.channel {
+  background: #020617;
+  border-radius: 14px;
+  padding: 16px;
+  border: 1px solid rgba(255,255,255,.08);
+  display: flex;
+  flex-direction: column;
 }
 
-/* Card */
-.channel{
-  position: relative;
-  background: linear-gradient(180deg, rgba(14,24,48,.95), rgba(11,20,38,.78));
-  border: 1px solid var(--ms-line);
-  border-radius: var(--ms-radius);
-  padding: 14px;
-  box-shadow: var(--ms-shadow);
-  transition: transform .12s ease, border-color .12s ease, background .12s ease;
-}
-
-.channel:hover{
-  transform: translateY(-2px);
-  border-color: rgba(0,64,128,.35);
-  background: linear-gradient(180deg, rgba(14,24,48,.98), rgba(11,20,38,.88));
-}
-
-/* Título de cliente */
-.channel h3{
-  margin: 0 0 10px 0;
-  font-size: 13px;
-  line-height: 1.25;
+/* Nombre del cliente */
+.channel h3 {
+  margin: 0 0 10px;
+  font-size: 14px;
   font-weight: 700;
-  letter-spacing: .2px;
+  letter-spacing: 0.3px;
 }
 
-/* Separador sutil (opcional) */
-.channel h3::after{
-  content: "";
-  display: block;
-  margin-top: 10px;
-  height: 1px;
-  background: linear-gradient(90deg, rgba(0,64,128,.55), rgba(41,163,41,.35), transparent);
-  opacity: .55;
-}
-
-/* Audio player */
-audio{
+/* ---------- Audio ---------- */
+.channel audio {
   width: 100%;
-  height: 38px;
+  margin-bottom: 10px;
+}
+
+/* ---------- Widget RadioBOSS ---------- */
+.rb-frame-wrap {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255,255,255,.10);
+}
+
+.rb-frame {
+  width: 100%;
+  height: 360px;
+  border: none;
+  border-radius: 12px;
+  background: transparent;
+}
+
+/* ---------- Estados ---------- */
+.error {
+  background: rgba(239,68,68,.15);
+  border: 1px solid rgba(239,68,68,.4);
+  padding: 14px;
   border-radius: 10px;
-  outline: none;
-  filter: saturate(1.05);
+  color: #fecaca;
+  font-size: 13px;
 }
 
-/* Footer */
-footer{
+.empty {
+  opacity: 0.7;
+  font-size: 13px;
+}
+
+/* ---------- Footer ---------- */
+footer {
   text-align: center;
-  padding: 18px 15px 24px;
+  padding: 16px;
   font-size: 12px;
-  color: var(--ms-muted);
-  border-top: 1px solid var(--ms-line);
-  background: rgba(7,11,18,.60);
+  opacity: 0.6;
+  border-top: 1px solid rgba(255,255,255,.08);
+  background: #020617;
 }
 
-/* Accesibilidad */
-@media (prefers-reduced-motion: reduce){
-  *{ transition: none !important; }
+/* ---------- Scrollbar (WebKit) ---------- */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #020617;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,.25);
+  border-radius: 8px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255,255,255,.4);
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 480px) {
+  header h1 {
+    font-size: 18px;
+  }
+
+  main {
+    padding: 14px;
+  }
+
+  #channels {
+    grid-template-columns: 1fr;
+  }
+
+  .rb-frame {
+    height: 380px;
+  }
 }
