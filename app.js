@@ -1,146 +1,118 @@
-// app.js — Monitor de Canales Musicales (Musicar)
-// - Lee channels.json
-// - Renderiza reproductor + metadata RadioBOSS vía iframe (widget.html)
-// - Buscador por cliente
-// - Muestra aviso si falta configuración rb
-
 const container = document.getElementById("channels");
 const searchInput = document.getElementById("search");
-
 let channels = [];
 
-// Cargar canales
 fetch("channels.json", { cache: "no-store" })
-  .then((res) => {
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    return res.json();
-  })
+  .then((r) => r.json())
   .then((data) => {
     channels = Array.isArray(data) ? data : [];
     renderChannels(channels);
   })
-  .catch((err) => {
-    console.error("Error cargando channels.json:", err);
-    container.innerHTML = `
-      <div class="error" style="padding:16px;">
-        No se pudo cargar <b>channels.json</b>. Verifica que exista en la raíz del repositorio y sea JSON válido.
-      </div>
-    `;
+  .catch((e) => {
+    console.error(e);
+    container.innerHTML = `<div class="error">No se pudo cargar channels.json</div>`;
   });
 
-// Render de tarjetas
 function renderChannels(list) {
   container.innerHTML = "";
-
-  if (!list.length) {
-    container.innerHTML = `
-      <div class="empty" style="padding:16px;opacity:.8;">
-        No hay canales para mostrar.
-      </div>
-    `;
-    return;
-  }
-
-  list.forEach((channel) => {
-    const clientName = channel.client ?? "Cliente sin nombre";
-    const streamUrl = channel.url ?? "";
-
-    const hasRB =
-      channel.rb &&
-      channel.rb.host &&
-      channel.rb.u !== undefined &&
-      channel.rb.widNow !== undefined &&
-      channel.rb.widCover !== undefined &&
-      channel.rb.widRecent !== undefined;
-
-    const widgetUrl = hasRB ? buildWidgetUrl(channel.rb) : null;
-
+  list.forEach((ch, idx) => {
     const card = document.createElement("div");
     card.className = "channel";
 
+    const client = ch.client || "SIN NOMBRE";
+    const url = ch.url || "";
+
     card.innerHTML = `
-      <h3>${escapeHtml(clientName)}</h3>
+      <h3>${escapeHtml(client)}</h3>
 
-      ${
-        streamUrl
-          ? `
-            <audio controls preload="none">
-              <source src="${escapeAttr(streamUrl)}" type="audio/mpeg">
-              Tu navegador no soporta audio HTML5.
-            </audio>
-          `
-          : `<div style="opacity:.8;font-size:12px;">Sin URL de stream configurada</div>`
-      }
+      ${url ? `
+        <audio controls preload="none" crossorigin="anonymous">
+          <source src="${escapeAttr(url)}" type="audio/mpeg">
+          Tu navegador no soporta audio HTML5.
+        </audio>
+      ` : `<div class="rb-missing">Sin URL de stream.</div>`}
 
-      ${
-        widgetUrl
-          ? `
-            <div class="rb-frame-wrap">
-              <iframe
-                class="rb-frame"
-                src="${escapeAttr(widgetUrl)}"
-                title="RadioBOSS Widget - ${escapeAttr(clientName)}"
-                loading="lazy"
-              ></iframe>
-            </div>
-          `
-          : `
-            <div class="rb-missing">
-              Metadata no configurada (falta <b>rb</b> en channels.json).
-            </div>
-          `
-      }
+      <div class="rb-block">
+        <div class="rb-title">AHORA SONANDO</div>
+        <div id="np_${idx}" class="rb-now"></div>
+      </div>
+
+      <div class="rb-block">
+        <div class="rb-title">RECIENTES (10)</div>
+        <div id="rt_${idx}" class="rb-recent"></div>
+      </div>
     `;
 
     container.appendChild(card);
+
+    // Insertar widgets RadioBOSS (si hay configuración)
+    if (ch.rb && ch.rb.host && ch.rb.u && ch.rb.widNow && ch.rb.widRecent) {
+      mountRadioBossWidgets(ch.rb, idx);
+    } else {
+      card.querySelectorAll(".rb-now, .rb-recent").forEach(el => {
+        el.innerHTML = `<div class="rb-missing">Falta configuración rb en channels.json</div>`;
+      });
+    }
   });
 }
 
-// Construye URL del iframe hacia widget.html con parámetros RadioBOSS
-function buildWidgetUrl(rb) {
-  // rb esperado:
-  // {
-  //   host: "https://c38.radioboss.fm",
-  //   u: 216,
-  //   widNow: 7129,
-  //   widCover: 9063,
-  //   widRecent: 8064,
-  //   tf: 1 (opcional)
-  // }
+function mountRadioBossWidgets(rb, idx) {
+  const host = rb.host;
+  const u = rb.u;
+  const widNow = rb.widNow;
+  const widRecent = rb.widRecent;
+  const tf = rb.tf ? `&tf=${rb.tf}` : "";
 
-  const params = new URLSearchParams({
-    host: String(rb.host ?? ""),
-    u: String(rb.u ?? ""),
-    widNow: String(rb.widNow ?? ""),
-    widCover: String(rb.widCover ?? ""),
-    widRecent: String(rb.widRecent ?? "")
-  });
+  // Now Playing (HTML oficial)
+  const np = document.getElementById(`np_${idx}`);
+  np.innerHTML = `
+    <div class="rbcloud_nowplaying">
+      <div>
+        <a target="_blank" rel="noopener" href="${host}/w/artwork/${u}.jpg">
+          <img id="rbcloud_np_c${widNow}" src="${host}/w/artwork/${u}.jpg" width="65" height="65" alt="cover art">
+        </a>
+      </div>
+      <div style="margin-left: 5pt;">
+        <div id="rbcloud_np_a${widNow}" style="font-weight: bold"></div>
+        <div id="rbcloud_np_t${widNow}">...</div>
+      </div>
+    </div>
+  `;
 
-  // tf opcional
-  if (rb.tf !== undefined && rb.tf !== null && String(rb.tf) !== "" && String(rb.tf) !== "0") {
-    params.set("tf", String(rb.tf));
-  }
+  // Recent (HTML oficial)
+  const rt = document.getElementById(`rt_${idx}`);
+  rt.innerHTML = `
+    <div class="rbcloud_recenttracks" id="rbcloud_recent${widRecent}" data-cnt="10">
+      <div class="rbcloud_recent_track">
+        <div class="rbcloud_recent_track_cover" data-size="65"></div>
+        <div style="margin-left: 5pt;">
+          <div class="rbcloud_recent_artist" style="font-weight: bold"></div>
+          <div class="rbcloud_recent_title">...</div>
+        </div>
+      </div>
+    </div>
+  `;
 
-  return `./widget.html?${params.toString()}`;
+  // Scripts (evitar duplicado por wid)
+  injectOnce(`rb_np_script_${widNow}`, `${host}/w/nowplaying2.js?u=${u}&wid=${widNow}${tf}`);
+  injectOnce(`rb_recent_script_${widRecent}`, `${host}/w/recent.js?u=${u}&wid=${widRecent}&v=2${tf}`);
 }
 
-// Buscador por nombre de cliente
+function injectOnce(id, src) {
+  if (document.getElementById(id)) return;
+  const s = document.createElement("script");
+  s.id = id;
+  s.src = src;
+  s.async = true;
+  document.body.appendChild(s);
+}
+
 searchInput?.addEventListener("input", (e) => {
-  const value = (e.target.value || "").toLowerCase().trim();
-
-  if (!value) {
-    renderChannels(channels);
-    return;
-  }
-
-  const filtered = channels.filter((c) =>
-    String(c.client || "").toLowerCase().includes(value)
-  );
-
-  renderChannels(filtered);
+  const v = (e.target.value || "").toLowerCase().trim();
+  if (!v) return renderChannels(channels);
+  renderChannels(channels.filter(c => String(c.client || "").toLowerCase().includes(v)));
 });
 
-// Helpers de escape
 function escapeHtml(str) {
   return String(str ?? "")
     .replaceAll("&", "&amp;")
@@ -149,9 +121,4 @@ function escapeHtml(str) {
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#039;");
 }
-
-function escapeAttr(str) {
-  return escapeHtml(str);
-}
-
-
+function escapeAttr(str) { return escapeHtml(str); }
