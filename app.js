@@ -1,5 +1,6 @@
 const container = document.getElementById("channels");
 const searchInput = document.getElementById("search");
+
 let channels = [];
 
 fetch("channels.json", { cache: "no-store" })
@@ -15,6 +16,12 @@ fetch("channels.json", { cache: "no-store" })
 
 function renderChannels(list) {
   container.innerHTML = "";
+
+  if (!list.length) {
+    container.innerHTML = `<div class="empty">No hay canales para mostrar.</div>`;
+    return;
+  }
+
   list.forEach((ch, idx) => {
     const card = document.createElement("div");
     card.className = "channel";
@@ -45,72 +52,82 @@ function renderChannels(list) {
 
     container.appendChild(card);
 
-    // Insertar widgets RadioBOSS (si hay configuración)
+    // Montaje RadioBOSS (si hay RB config)
     if (ch.rb && ch.rb.host && ch.rb.u && ch.rb.widNow && ch.rb.widRecent) {
-      mountRadioBossWidgets(ch.rb, idx);
+      mountRadioBoss(ch.rb, idx);
     } else {
-      card.querySelectorAll(".rb-now, .rb-recent").forEach(el => {
-        el.innerHTML = `<div class="rb-missing">Falta configuración rb en channels.json</div>`;
-      });
+      card.querySelector("#np_" + idx).innerHTML = `<div class="rb-missing">Falta configuración rb en channels.json</div>`;
+      card.querySelector("#rt_" + idx).innerHTML = `<div class="rb-missing">Falta configuración rb en channels.json</div>`;
     }
   });
 }
 
-function mountRadioBossWidgets(rb, idx) {
+function mountRadioBoss(rb, idx) {
   const host = rb.host;
   const u = rb.u;
   const widNow = rb.widNow;
   const widRecent = rb.widRecent;
   const tf = rb.tf ? `&tf=${rb.tf}` : "";
 
-  // Now Playing (HTML oficial)
+  // Now Playing (HTML que RadioBOSS espera)
   const np = document.getElementById(`np_${idx}`);
   np.innerHTML = `
-    <div class="rbcloud_nowplaying">
+    <div class="rbcloud_nowplaying" style="display:flex;align-items:center;">
       <div>
         <a target="_blank" rel="noopener" href="${host}/w/artwork/${u}.jpg">
           <img id="rbcloud_np_c${widNow}" src="${host}/w/artwork/${u}.jpg" width="65" height="65" alt="cover art">
         </a>
       </div>
-      <div style="margin-left: 5pt;">
-        <div id="rbcloud_np_a${widNow}" style="font-weight: bold"></div>
+      <div style="margin-left:5pt;">
+        <div id="rbcloud_np_a${widNow}" style="font-weight:bold"></div>
         <div id="rbcloud_np_t${widNow}">...</div>
       </div>
     </div>
   `;
 
-  // Recent (HTML oficial)
+  // Recientes (HTML que RadioBOSS espera)
   const rt = document.getElementById(`rt_${idx}`);
   rt.innerHTML = `
     <div class="rbcloud_recenttracks" id="rbcloud_recent${widRecent}" data-cnt="10">
-      <div class="rbcloud_recent_track">
+      <div class="rbcloud_recent_track" style="display:flex;align-items:center;margin-bottom:5pt;">
         <div class="rbcloud_recent_track_cover" data-size="65"></div>
-        <div style="margin-left: 5pt;">
-          <div class="rbcloud_recent_artist" style="font-weight: bold"></div>
+        <div style="margin-left:5pt;">
+          <div class="rbcloud_recent_artist" style="font-weight:bold"></div>
           <div class="rbcloud_recent_title">...</div>
         </div>
       </div>
     </div>
   `;
 
-  // Scripts (evitar duplicado por wid)
-  injectOnce(`rb_np_script_${widNow}`, `${host}/w/nowplaying2.js?u=${u}&wid=${widNow}${tf}`);
-  injectOnce(`rb_recent_script_${widRecent}`, `${host}/w/recent.js?u=${u}&wid=${widRecent}&v=2${tf}`);
+  // Inyectar scripts (solo una vez por widget id)
+  injectOnce(`rb_np_script_${host}_${widNow}`, `${host}/w/nowplaying2.js?u=${u}&wid=${widNow}${tf}`);
+  injectOnce(`rb_recent_script_${host}_${widRecent}`, `${host}/w/recent.js?u=${u}&wid=${widRecent}&v=2${tf}`);
 }
 
 function injectOnce(id, src) {
-  if (document.getElementById(id)) return;
+  const safeId = id.replaceAll(/[^a-zA-Z0-9_-]/g, "_");
+  if (document.getElementById(safeId)) return;
+
   const s = document.createElement("script");
-  s.id = id;
+  s.id = safeId;
   s.src = src;
   s.async = true;
+
+  // Si falla, al menos queda registro en consola
+  s.onerror = () => console.error("No se pudo cargar script:", src);
+
   document.body.appendChild(s);
 }
 
 searchInput?.addEventListener("input", (e) => {
   const v = (e.target.value || "").toLowerCase().trim();
   if (!v) return renderChannels(channels);
-  renderChannels(channels.filter(c => String(c.client || "").toLowerCase().includes(v)));
+
+  const filtered = channels.filter(c =>
+    String(c.client || "").toLowerCase().includes(v)
+  );
+
+  renderChannels(filtered);
 });
 
 function escapeHtml(str) {
@@ -121,4 +138,7 @@ function escapeHtml(str) {
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#039;");
 }
-function escapeAttr(str) { return escapeHtml(str); }
+
+function escapeAttr(str) {
+  return escapeHtml(str);
+}
