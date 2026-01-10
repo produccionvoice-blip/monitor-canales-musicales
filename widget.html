@@ -6,93 +6,115 @@
   <title>RadioBOSS Monitor</title>
 
   <style>
+    :root{
+      --text: #e5e7eb;
+      --muted: rgba(229,231,235,.78);
+      --border: rgba(255,255,255,.10);
+      --bgCard: rgba(255,255,255,.04);
+    }
+
     body{
       margin:0;
       font-family: Arial, sans-serif;
-      color:#e5e7eb;
+      color: var(--text);
       background: transparent;
     }
+
     .wrap{
       display:flex;
       flex-direction:column;
       gap:12px;
       padding:12px;
     }
+
     .card{
-      border:1px solid rgba(255,255,255,.10);
+      border:1px solid var(--border);
       border-radius:12px;
-      background: rgba(255,255,255,.04);
+      background: var(--bgCard);
       padding:12px;
     }
+
     .label{
       font-size:11px;
       opacity:.75;
       letter-spacing:.6px;
       text-transform: uppercase;
       margin-bottom:10px;
-      font-weight:700;
+      font-weight:800;
     }
 
-    /* NOW PLAYING — prioridad de monitoreo */
+    /* ===========================
+       NOW PLAYING (texto primero)
+       =========================== */
     .np{
       display:grid;
-      grid-template-columns: 56px 1fr;
-      gap:12px;
-      align-items:center;
-    }
-    .np img{
-      width:56px;
-      height:56px;
-      border-radius:10px;
-      border:1px solid rgba(255,255,255,.12);
-      object-fit:cover;
-      background: rgba(255,255,255,.04);
-    }
-    .np-artist{
-      font-size:14px;
-      font-weight:800;
-      line-height:1.2;
-      margin-bottom:2px;
-    }
-    .np-title{
-      font-size:13px;
-      opacity:.9;
-      line-height:1.2;
+      grid-template-columns: 1fr;
+      gap:6px;
     }
 
-    /* RECENTS — playlist */
-    .recent .rbcloud_recent_track{
-      display:grid !important;
-      grid-template-columns: 32px 1fr;
+    .np-artist{
+      font-size:14px;
+      font-weight:900;
+      line-height:1.2;
+      margin:0;
+    }
+
+    .np-title{
+      font-size:13px;
+      opacity:.95;
+      line-height:1.25;
+      margin:0;
+    }
+
+    .np-meta{
+      margin-top:6px;
+      padding-top:8px;
+      border-top:1px solid rgba(255,255,255,.08);
+      font-size:11px;
+      color: var(--muted);
+      display:flex;
+      justify-content:space-between;
       gap:10px;
-      align-items:center;
+      flex-wrap:wrap;
+    }
+
+    /* ===========================
+       RECENTS (playlist 10 items)
+       =========================== */
+    .recent .rbcloud_recent_track{
+      display:block !important;
       margin: 0 !important;
-      padding: 8px 0;
+      padding: 6px 0;            /* compacto para ver más items */
       border-bottom:1px solid rgba(255,255,255,.08);
     }
     .recent .rbcloud_recent_track:last-child{ border-bottom:0; }
+
+    /* Ocultamos carátula de recientes para monitoreo */
     .recent .rbcloud_recent_track_cover{
-      width:32px;
-      height:32px;
-      border-radius:8px;
-      overflow:hidden;
-      border:1px solid rgba(255,255,255,.10);
-      background: rgba(255,255,255,.04);
+      display:none !important;
     }
+
     .recent .rbcloud_recent_artist{
-      font-weight:800 !important;
+      font-weight:900 !important;
       font-size:12px;
-      line-height:1.1;
+      line-height:1.15;
     }
+
     .recent .rbcloud_recent_title{
       font-size:12px;
-      opacity:.9;
-      line-height:1.1;
+      opacity:.92;
+      line-height:1.15;
       margin-top:2px;
     }
 
-    /* Cover grande opcional: lo dejamos oculto por monitoreo */
-    .coverBig { display:none; }
+    /* (Opcional) si RadioBOSS agrega hora/tiempo, lo dejamos discreto */
+    .recent .rbcloud_recent_time{
+      font-size:11px;
+      opacity:.7;
+    }
+
+    /* Carátulas: totalmente ocultas (modo monitoreo) */
+    .coverBig { display:none !important; }
   </style>
 </head>
 
@@ -102,32 +124,45 @@
     <!-- NOW PLAYING -->
     <div class="card">
       <div class="label">Ahora sonando</div>
+
+      <!-- Elementos visibles (nuestro UI) -->
       <div class="np">
-        <a target="_blank" rel="noopener" id="npLink">
-          <img id="npCover" alt="cover art">
-        </a>
-        <div>
-          <div class="np-artist" id="npArtist">Cargando…</div>
-          <div class="np-title" id="npTitle">Esperando información</div>
+        <p class="np-artist" id="npArtist">Cargando…</p>
+        <p class="np-title" id="npTitle">Esperando información</p>
+
+        <div class="np-meta">
+          <span id="npStatus">Estado: Cargando</span>
+          <span id="npUpdated">Actualizado: —</span>
         </div>
+      </div>
+
+      <!-- Elementos que RadioBOSS llena (ocultos) -->
+      <div style="display:none;">
+        <div id="rbcloud_np_a__HOLDER"></div>
+        <div id="rbcloud_np_t__HOLDER">...</div>
+        <img id="rbcloud_np_c__HOLDER" alt="cover art" />
       </div>
     </div>
 
     <!-- RECENTS -->
-    <div class="card recent" id="recentBox">
-      <div class="label">Recientes</div>
-      <div class="rbcloud_recenttracks" id="recentRoot" data-cnt="10">
+    <div class="card recent">
+      <div class="label">Recientes (10)</div>
+
+      <!-- Contenedor visible -->
+      <div id="recentRoot" class="rbcloud_recenttracks" data-cnt="10">
         <div class="rbcloud_recent_track">
-          <div class="rbcloud_recent_track_cover" data-size="32"></div>
-          <div>
-            <div class="rbcloud_recent_artist"></div>
-            <div class="rbcloud_recent_title">...</div>
-          </div>
+          <div class="rbcloud_recent_artist"></div>
+          <div class="rbcloud_recent_title">...</div>
         </div>
+      </div>
+
+      <!-- Contenedor oculto que RadioBOSS llena -->
+      <div style="display:none;">
+        <div class="rbcloud_recenttracks" id="rbcloud_recent__HOLDER" data-cnt="10"></div>
       </div>
     </div>
 
-    <!-- (Opcional) Carátula grande, desactivada por monitoreo -->
+    <!-- Cover grande (desactivado por monitoreo) -->
     <div class="card coverBig" id="coverBox">
       <div class="label">Carátula</div>
       <a target="_blank" rel="noopener" id="coverLink">
@@ -139,6 +174,7 @@
 
   <script>
     const params = new URLSearchParams(location.search);
+
     const host = params.get("host");
     const u = params.get("u");
     const widNow = params.get("widNow");
@@ -153,62 +189,93 @@
       document.body.appendChild(s);
     }
 
-    // Setup cover links
-    const artworkUrl = `${host}/w/artwork/${u}.jpg`;
-    const npLink = document.getElementById("npLink");
-    const npCover = document.getElementById("npCover");
-    npLink.href = artworkUrl;
-    npCover.src = artworkUrl;
-
-    // Optional big cover (hidden)
-    const coverLink = document.getElementById("coverLink");
-    const coverImg = document.getElementById("coverImg");
-    if (coverLink && coverImg) {
-      coverLink.href = artworkUrl;
-      coverImg.src = artworkUrl;
+    // Validación mínima (evita widget en blanco por parámetros faltantes)
+    const required = [host, u, widNow, widRecent];
+    if (required.some(v => !v)) {
+      document.body.innerHTML = "<div style='padding:12px;color:#e5e7eb;font-family:Arial'>Faltan parámetros en widget.html</div>";
+      throw new Error("Missing query params");
     }
 
-    // Hidden elements RadioBOSS expects (so the script can populate)
-    const hidden = document.createElement("div");
-    hidden.style.display = "none";
-    hidden.innerHTML = `
-      <div id="rbcloud_np_a${widNow}"></div>
-      <div id="rbcloud_np_t${widNow}"></div>
-      <img id="rbcloud_np_c${widNow}" src="${artworkUrl}" />
-      <img id="rbcloud_cover${widCover}" src="${artworkUrl}" />
-      <div class="rbcloud_recenttracks" id="rbcloud_recent${widRecent}" data-cnt="10"></div>
-    `;
-    document.body.appendChild(hidden);
+    // Reemplaza IDs placeholders por IDs reales (para que nowplaying2.js escriba)
+    const holderArtist = document.getElementById("rbcloud_np_a__HOLDER");
+    const holderTitle  = document.getElementById("rbcloud_np_t__HOLDER");
+    const holderCover  = document.getElementById("rbcloud_np_c__HOLDER");
+    holderArtist.id = `rbcloud_np_a${widNow}`;
+    holderTitle.id  = `rbcloud_np_t${widNow}`;
+    holderCover.id  = `rbcloud_np_c${widNow}`;
 
-    // Load scripts
+    const recentHolder = document.getElementById("rbcloud_recent__HOLDER");
+    recentHolder.id = `rbcloud_recent${widRecent}`;
+
+    // Scripts RadioBOSS
     injectScript(`${host}/w/nowplaying2.js?u=${u}&wid=${widNow}${tf ? `&tf=${tf}` : ""}`);
     injectScript(`${host}/w/recent.js?u=${u}&wid=${widRecent}&v=2${tf ? `&tf=${tf}` : ""}`);
-    injectScript(`${host}/w/cover.js?u=${u}&wid=${widCover}${tf ? `&tf=${tf}` : ""}`);
 
-    // Mirror to our UI (poll the populated nodes)
+    // (Cover script no es necesario para monitoreo; lo omitimos)
+    // injectScript(`${host}/w/cover.js?u=${u}&wid=${widCover}${tf ? `&tf=${tf}` : ""}`);
+
+    // Sincronización a UI
+    let lastText = "";
+    let lastUpdateTs = 0;
+
+    function setUpdatedNow() {
+      const el = document.getElementById("npUpdated");
+      const d = new Date();
+      const hh = String(d.getHours()).padStart(2,"0");
+      const mm = String(d.getMinutes()).padStart(2,"0");
+      const ss = String(d.getSeconds()).padStart(2,"0");
+      el.textContent = `Actualizado: ${hh}:${mm}:${ss}`;
+    }
+
     function syncNowPlaying(){
       const a = document.getElementById(`rbcloud_np_a${widNow}`);
       const t = document.getElementById(`rbcloud_np_t${widNow}`);
+
       const artist = (a && a.textContent || "").trim();
       const title  = (t && t.textContent || "").trim();
 
+      // Si RadioBOSS todavía no cargó
+      if (!artist && (!title || title === "..." )) {
+        document.getElementById("npStatus").textContent = "Estado: Cargando";
+        return;
+      }
+
       if (artist) document.getElementById("npArtist").textContent = artist;
       if (title && title !== "...") document.getElementById("npTitle").textContent = title;
-    }
-    setInterval(syncNowPlaying, 800);
-    syncNowPlaying();
 
-    // Place recent list in our visible container
-    // RadioBOSS will fill #rbcloud_recent{widRecent}, then we copy its children.
+      const combined = `${artist} - ${title}`;
+      if (combined !== lastText) {
+        lastText = combined;
+        lastUpdateTs = Date.now();
+        setUpdatedNow();
+      }
+
+      // Estado simple: activo si hay texto
+      document.getElementById("npStatus").textContent = "Estado: Activo";
+    }
+
     function syncRecents(){
       const src = document.getElementById(`rbcloud_recent${widRecent}`);
       const dst = document.getElementById("recentRoot");
       if (!src || !dst) return;
-      if (src.children.length > 0) {
+
+      // Cuando RadioBOSS llena el contenedor, copiamos al visible
+      if (src.innerHTML && src.innerHTML.trim().length > 0) {
         dst.innerHTML = src.innerHTML;
+
+        // Monitoreo: aseguramos que no se vean covers (por si vienen)
+        dst.querySelectorAll(".rbcloud_recent_track_cover").forEach(el => {
+          el.style.display = "none";
+        });
       }
     }
+
+    // Polling (suficiente para monitoreo)
+    setInterval(syncNowPlaying, 800);
     setInterval(syncRecents, 1200);
+
+    // Primera ejecución
+    syncNowPlaying();
     syncRecents();
   </script>
 </body>
