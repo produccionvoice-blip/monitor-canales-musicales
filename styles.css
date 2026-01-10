@@ -1,12 +1,10 @@
 /* =========================================================
    styles.css – Monitor de Canales Musicales | Musicar
-   Modo Monitoreo 24/7
+   Modo Monitoreo 24/7 (texto primero)
    ========================================================= */
 
 /* ---------- Reset ---------- */
-* {
-  box-sizing: border-box;
-}
+* { box-sizing: border-box; }
 
 html, body {
   margin: 0;
@@ -25,7 +23,6 @@ header {
   border-bottom: 1px solid rgba(255,255,255,.08);
 }
 
-/* Logo Musicar */
 .logo {
   display: block;
   margin: 0 auto 14px;
@@ -34,7 +31,6 @@ header {
   height: auto;
 }
 
-/* Título */
 header h1 {
   margin: 0;
   font-size: 20px;
@@ -42,14 +38,12 @@ header h1 {
   letter-spacing: 0.5px;
 }
 
-/* Subtítulo */
 header p {
   margin: 6px 0 16px;
   font-size: 13px;
   opacity: 0.75;
 }
 
-/* ---------- Buscador ---------- */
 header input {
   padding: 11px 14px;
   width: 340px;
@@ -60,29 +54,20 @@ header input {
   color: #e5e7eb;
   font-size: 13px;
 }
+header input::placeholder { color: rgba(255,255,255,.45); }
+header input:focus { outline: none; border-color: #38bdf8; }
 
-header input::placeholder {
-  color: rgba(255,255,255,.45);
-}
+/* ---------- Main ---------- */
+main { padding: 22px; }
 
-header input:focus {
-  outline: none;
-  border-color: #38bdf8;
-}
-
-/* ---------- Contenedor principal ---------- */
-main {
-  padding: 22px;
-}
-
-/* ---------- Grid de canales ---------- */
+/* ---------- Grid ---------- */
 #channels {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
   gap: 18px;
 }
 
-/* ---------- Tarjeta de canal ---------- */
+/* ---------- Card ---------- */
 .channel {
   background: linear-gradient(180deg, rgba(2,6,23,.95), rgba(2,6,23,.85));
   border-radius: 16px;
@@ -92,7 +77,6 @@ main {
   flex-direction: column;
 }
 
-/* Nombre del cliente */
 .channel h3 {
   margin: 0 0 12px;
   font-size: 15px;
@@ -101,31 +85,77 @@ main {
   text-transform: uppercase;
 }
 
-/* ---------- Audio ---------- */
 .channel audio {
   width: 100%;
   margin-bottom: 12px;
   filter: brightness(1.05);
 }
 
-/* ---------- Widget RadioBOSS (iframe) ---------- */
-.rb-frame-wrap {
-  margin-top: 8px;
+/* ---------- RB Blocks ---------- */
+.rb-block{
+  margin-top: 10px;
   padding-top: 10px;
   border-top: 1px solid rgba(255,255,255,.10);
 }
 
-.rb-frame {
-  width: 100%;
-  height: 420px; /* suficiente para Now + Recientes sin scroll interno */
-  border: none;
-  border-radius: 14px;
-  background: transparent;
+.rb-title{
+  font-size: 11px;
+  font-weight: 900;
+  opacity: .75;
+  letter-spacing: .6px;
+  text-transform: uppercase;
+  margin-bottom: 8px;
 }
 
-/* ---------- Avisos ---------- */
+/* ---------- RadioBOSS: MONITOREO (texto primero) ---------- */
+/* Ocultar carátulas/links */
+.rbcloud_nowplaying a,
+.rbcloud_nowplaying img,
+.rbcloud_recent_track_cover{
+  display: none !important;
+}
+
+/* Forzar layout simple */
+.rbcloud_nowplaying{
+  display: block !important;
+}
+
+/* Now Playing texto grande */
+.rbcloud_nowplaying [id^="rbcloud_np_a"]{
+  font-weight: 900 !important;
+  font-size: 14px !important;
+  line-height: 1.15 !important;
+}
+.rbcloud_nowplaying [id^="rbcloud_np_t"]{
+  font-size: 13px !important;
+  opacity: .95 !important;
+  line-height: 1.15 !important;
+}
+
+/* Recientes: playlist compacta */
+.rbcloud_recenttracks .rbcloud_recent_track{
+  display: block !important;
+  margin: 0 !important;
+  padding: 6px 0 !important;
+  border-bottom: 1px solid rgba(255,255,255,.08);
+}
+.rbcloud_recenttracks .rbcloud_recent_track:last-child{
+  border-bottom: 0;
+}
+.rbcloud_recent_artist{
+  font-weight: 900 !important;
+  font-size: 12px !important;
+  line-height: 1.15 !important;
+}
+.rbcloud_recent_title{
+  font-size: 12px !important;
+  opacity: .92 !important;
+  line-height: 1.15 !important;
+}
+
+/* ---------- Notices ---------- */
 .rb-missing{
-  margin-top: 12px;
+  margin-top: 10px;
   padding: 12px 14px;
   border-radius: 12px;
   border: 1px solid rgba(255,255,255,.12);
@@ -134,7 +164,6 @@ main {
   opacity: .85;
 }
 
-/* ---------- Estados globales ---------- */
 .error {
   background: rgba(239,68,68,.15);
   border: 1px solid rgba(239,68,68,.4);
@@ -144,13 +173,10 @@ main {
   font-size: 13px;
 }
 
-.empty {
-  opacity: 0.7;
-  font-size: 13px;
-}
+.empty { opacity: 0.7; font-size: 13px; }
 
 /* ---------- Footer ---------- */
-footer {
+footer{
   text-align: center;
   padding: 16px;
   font-size: 12px;
@@ -159,40 +185,15 @@ footer {
   background: #020617;
 }
 
-/* ---------- Scrollbar (WebKit) ---------- */
-::-webkit-scrollbar {
-  width: 8px;
-}
-
-::-webkit-scrollbar-track {
-  background: #020617;
-}
-
-::-webkit-scrollbar-thumb {
-  background: rgba(255,255,255,.25);
-  border-radius: 8px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(255,255,255,.4);
-}
+/* ---------- Scrollbar ---------- */
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: #020617; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,.25); border-radius: 8px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,.4); }
 
 /* ---------- Responsive ---------- */
 @media (max-width: 520px) {
-
-  header h1 {
-    font-size: 18px;
-  }
-
-  main {
-    padding: 14px;
-  }
-
-  #channels {
-    grid-template-columns: 1fr;
-  }
-
-  .rb-frame {
-    height: 460px;
-  }
+  header h1 { font-size: 18px; }
+  main { padding: 14px; }
+  #channels { grid-template-columns: 1fr; }
 }
