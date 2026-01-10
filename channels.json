@@ -1,14 +1,36 @@
 [
   {
     "client": "PEPE GANGA",
-    "url": "https://c38.radioboss.fm:8216/stream"
+    "url": "https://c38.radioboss.fm:8216/stream",
+    "rb": {
+      "host": "https://c38.radioboss.fm",
+      "u": 216,
+      "widNow": 7129,
+      "widCover": 9063,
+      "widRecent": 8064,
+      "tf": 1
+    }
   },
   {
     "client": "MOTOAMERICANA",
-    "url": "https://c9.radioboss.fm:8087/stream"
+    "url": "https://c9.radioboss.fm:8087/stream",
+    "rb": {
+      "host": "https://c9.radioboss.fm",
+      "u": 87,
+      "widNow": 12074,
+      "widCover": 6281,
+      "widRecent": 5636
+    }
   },
   {
     "client": "AMARILO",
-    "url": "https://c9.radioboss.fm:8090/stream"
+    "url": "https://c9.radioboss.fm:8090/stream",
+    "rb": {
+      "host": "https://c9.radioboss.fm",
+      "u": 90,
+      "widNow": 2860,
+      "widCover": 4858,
+      "widRecent": 7931
+    }
   }
 ]
