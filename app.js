@@ -1,3 +1,4 @@
+// app.js (HOME) – Lista de clientes + buscador
 const container = document.getElementById("channels");
 const searchInput = document.getElementById("search");
 
@@ -7,127 +8,55 @@ fetch("channels.json", { cache: "no-store" })
   .then((r) => r.json())
   .then((data) => {
     channels = Array.isArray(data) ? data : [];
-    renderChannels(channels);
+    renderHome(channels);
   })
   .catch((e) => {
     console.error(e);
     container.innerHTML = `<div class="error">No se pudo cargar channels.json</div>`;
   });
 
-function renderChannels(list) {
+function renderHome(list) {
   container.innerHTML = "";
 
   if (!list.length) {
-    container.innerHTML = `<div class="empty">No hay canales para mostrar.</div>`;
+    container.innerHTML = `<div class="empty">No hay clientes para mostrar.</div>`;
     return;
   }
 
-  list.forEach((ch, idx) => {
-    const card = document.createElement("div");
-    card.className = "channel";
+  list.forEach((ch) => {
+    const id = String(ch.id || "").trim();
+    const name = String(ch.client || "SIN NOMBRE").trim();
 
-    const client = ch.client || "SIN NOMBRE";
-    const url = ch.url || "";
+    const card = document.createElement("div");
+    card.className = "clientCard";
+
+    const safeName = escapeHtml(name);
+    const safeId = encodeURIComponent(id);
 
     card.innerHTML = `
-      <h3>${escapeHtml(client)}</h3>
-
-      ${url ? `
-        <audio controls preload="none" crossorigin="anonymous">
-          <source src="${escapeAttr(url)}" type="audio/mpeg">
-          Tu navegador no soporta audio HTML5.
-        </audio>
-      ` : `<div class="rb-missing">Sin URL de stream.</div>`}
-
-      <div class="rb-block">
-        <div class="rb-title">AHORA SONANDO</div>
-        <div id="np_${idx}" class="rb-now"></div>
-      </div>
-
-      <div class="rb-block">
-        <div class="rb-title">RECIENTES (10)</div>
-        <div id="rt_${idx}" class="rb-recent"></div>
-      </div>
+      <h3>${safeName}</h3>
+      ${
+        id
+          ? `<a href="client.html?id=${safeId}">Ver monitor</a>`
+          : `<div class="error">Falta "id" para este cliente en channels.json</div>`
+      }
     `;
 
     container.appendChild(card);
-
-    // Montaje RadioBOSS (si hay RB config)
-    if (ch.rb && ch.rb.host && ch.rb.u && ch.rb.widNow && ch.rb.widRecent) {
-      mountRadioBoss(ch.rb, idx);
-    } else {
-      card.querySelector("#np_" + idx).innerHTML = `<div class="rb-missing">Falta configuración rb en channels.json</div>`;
-      card.querySelector("#rt_" + idx).innerHTML = `<div class="rb-missing">Falta configuración rb en channels.json</div>`;
-    }
   });
 }
 
-function mountRadioBoss(rb, idx) {
-  const host = rb.host;
-  const u = rb.u;
-  const widNow = rb.widNow;
-  const widRecent = rb.widRecent;
-  const tf = rb.tf ? `&tf=${rb.tf}` : "";
-
-  // Now Playing (HTML que RadioBOSS espera)
-  const np = document.getElementById(`np_${idx}`);
-  np.innerHTML = `
-    <div class="rbcloud_nowplaying" style="display:flex;align-items:center;">
-      <div>
-        <a target="_blank" rel="noopener" href="${host}/w/artwork/${u}.jpg">
-          <img id="rbcloud_np_c${widNow}" src="${host}/w/artwork/${u}.jpg" width="65" height="65" alt="cover art">
-        </a>
-      </div>
-      <div style="margin-left:5pt;">
-        <div id="rbcloud_np_a${widNow}" style="font-weight:bold"></div>
-        <div id="rbcloud_np_t${widNow}">...</div>
-      </div>
-    </div>
-  `;
-
-  // Recientes (HTML que RadioBOSS espera)
-  const rt = document.getElementById(`rt_${idx}`);
-  rt.innerHTML = `
-    <div class="rbcloud_recenttracks" id="rbcloud_recent${widRecent}" data-cnt="10">
-      <div class="rbcloud_recent_track" style="display:flex;align-items:center;margin-bottom:5pt;">
-        <div class="rbcloud_recent_track_cover" data-size="65"></div>
-        <div style="margin-left:5pt;">
-          <div class="rbcloud_recent_artist" style="font-weight:bold"></div>
-          <div class="rbcloud_recent_title">...</div>
-        </div>
-      </div>
-    </div>
-  `;
-
-  // Inyectar scripts (solo una vez por widget id)
-  injectOnce(`rb_np_script_${host}_${widNow}`, `${host}/w/nowplaying2.js?u=${u}&wid=${widNow}${tf}`);
-  injectOnce(`rb_recent_script_${host}_${widRecent}`, `${host}/w/recent.js?u=${u}&wid=${widRecent}&v=2${tf}`);
-}
-
-function injectOnce(id, src) {
-  const safeId = id.replaceAll(/[^a-zA-Z0-9_-]/g, "_");
-  if (document.getElementById(safeId)) return;
-
-  const s = document.createElement("script");
-  s.id = safeId;
-  s.src = src;
-  s.async = true;
-
-  // Si falla, al menos queda registro en consola
-  s.onerror = () => console.error("No se pudo cargar script:", src);
-
-  document.body.appendChild(s);
-}
-
+// Buscador
 searchInput?.addEventListener("input", (e) => {
-  const v = (e.target.value || "").toLowerCase().trim();
-  if (!v) return renderChannels(channels);
+  const q = String(e.target.value || "").toLowerCase().trim();
+  if (!q) return renderHome(channels);
 
-  const filtered = channels.filter(c =>
-    String(c.client || "").toLowerCase().includes(v)
+  const filtered = channels.filter((c) =>
+    String(c.client || "").toLowerCase().includes(q) ||
+    String(c.id || "").toLowerCase().includes(q)
   );
 
-  renderChannels(filtered);
+  renderHome(filtered);
 });
 
 function escapeHtml(str) {
@@ -137,8 +66,4 @@ function escapeHtml(str) {
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#039;");
-}
-
-function escapeAttr(str) {
-  return escapeHtml(str);
 }
