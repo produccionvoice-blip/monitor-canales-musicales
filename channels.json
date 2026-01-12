@@ -3,34 +3,18 @@
     "id": "pepe-ganga",
     "client": "PEPE GANGA",
     "url": "https://c38.radioboss.fm:8216/stream",
-    "rb": {
-      "host": "https://c38.radioboss.fm",
-      "u": 216,
-      "widNow": 7129,
-      "widRecent": 8064,
-      "tf": 1
-    }
+    "rb": { "host": "https://c38.radioboss.fm", "u": 216, "widNow": 7129, "widRecent": 8064, "tf": 1 }
   },
   {
     "id": "motoamericana",
     "client": "MOTOAMERICANA",
     "url": "https://c9.radioboss.fm:8087/stream",
-    "rb": {
-      "host": "https://c9.radioboss.fm",
-      "u": 87,
-      "widNow": 12074,
-      "widRecent": 5636
-    }
+    "rb": { "host": "https://c9.radioboss.fm", "u": 87, "widNow": 12074, "widRecent": 5636 }
   },
   {
     "id": "amarilo",
     "client": "AMARILO",
     "url": "https://c9.radioboss.fm:8090/stream",
-    "rb": {
-      "host": "https://c9.radioboss.fm",
-      "u": 90,
-      "widNow": 2860,
-      "widRecent": 7931
-    }
+    "rb": { "host": "https://c9.radioboss.fm", "u": 90, "widNow": 2860, "widRecent": 7931 }
   }
 ]
