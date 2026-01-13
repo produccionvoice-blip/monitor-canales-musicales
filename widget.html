@@ -36,14 +36,14 @@
       font-weight:900;
     }
 
-    /* Monitoreo: ocultar carátulas */
+    /* Monitoreo: ocultar carátulas/miniaturas */
     .rbcloud_nowplaying a,
     .rbcloud_nowplaying img,
     .rbcloud_recent_track_cover{
       display:none !important;
     }
 
-    /* Now Playing: tipografía */
+    /* Tipografía clara */
     [id^="rbcloud_np_a"]{
       font-weight:900 !important;
       font-size:14px !important;
@@ -53,6 +53,7 @@
       font-size:13px !important;
       opacity:.95 !important;
       line-height:1.15 !important;
+      margin-top:2px;
     }
 
     /* Recientes: lista compacta */
@@ -77,7 +78,6 @@
       margin-top:2px;
     }
 
-    /* Estado */
     .status{
       margin-top:8px;
       font-size:12px;
@@ -96,23 +96,24 @@
     <div class="card">
       <div class="label">Ahora sonando</div>
 
-      <!-- RadioBOSS escribirá aquí (IDs dinámicos) -->
-      <div class="rbcloud_nowplaying" style="display:flex;align-items:center;">
-        <div style="margin-left:0;">
-          <div id="np_artist">Cargando…</div>
-          <div id="np_title">—</div>
+      <!-- Estructura OFICIAL (RadioBOSS NowPlaying) -->
+      <div class="rbcloud_nowplaying" id="np_container" style="display:flex;align-items:center;">
+        <div id="np_cover_slot"></div>
+
+        <div style="margin-left:5pt;">
+          <div id="np_artist_slot"></div>
+          <div id="np_title_slot">...</div>
         </div>
       </div>
 
-      <div id="np_hidden" style="display:none;"></div>
       <div id="np_status" class="status">Inicializando…</div>
     </div>
 
     <div class="card">
       <div class="label">Recientes (10)</div>
 
-      <!-- RadioBOSS necesita un contenedor con ID rbcloud_recent{widRecent} -->
-      <div id="recent_host"></div>
+      <!-- Aquí montamos el contenedor OFICIAL de Recents -->
+      <div id="recent_mount"></div>
 
       <div id="rt_status" class="status">Inicializando…</div>
     </div>
@@ -135,7 +136,12 @@
       const s = document.createElement("script");
       s.src = src;
       s.async = true;
-      s.onerror = () => console.error("No se pudo cargar:", src);
+      s.onerror = () => {
+        npStatus.textContent = "Error cargando scripts de RadioBOSS.";
+        npStatus.classList.add("err");
+        rtStatus.textContent = "Error cargando scripts de RadioBOSS.";
+        rtStatus.classList.add("err");
+      };
       document.body.appendChild(s);
     }
 
@@ -151,37 +157,45 @@
       throw new Error("Missing params");
     }
 
-    // 1) Crear los IDs EXACTOS que nowplaying2.js llena
-    const hidden = document.getElementById("np_hidden");
+    // ---------- NOW PLAYING (estructura oficial completa) ----------
+    // Cover (necesario para algunos builds)
+    const coverWrap = document.getElementById("np_cover_slot");
+    coverWrap.innerHTML = `
+      <a target="_blank" href="${host}/w/artwork/${encodeURIComponent(u)}.jpg">
+        <img id="rbcloud_np_c${widNow}" src="${host}/w/artwork/${encodeURIComponent(u)}.jpg"
+             width="65" height="65" alt="cover art">
+      </a>
+    `;
 
-    const a = document.createElement("div");
-    a.id = `rbcloud_np_a${widNow}`;
-    a.style.fontWeight = "bold";
+    // Artist/Title con IDs EXACTOS que ahora usa nowplaying2.js
+    const artistSlot = document.getElementById("np_artist_slot");
+    artistSlot.id = `rbcloud_np_a${widNow}`;
+    artistSlot.style.fontWeight = "bold";
 
-    const t = document.createElement("div");
-    t.id = `rbcloud_np_t${widNow}`;
-    t.textContent = "...";
+    const titleSlot = document.getElementById("np_title_slot");
+    titleSlot.id = `rbcloud_np_t${widNow}`;
+    titleSlot.textContent = "...";
 
-    hidden.appendChild(a);
-    hidden.appendChild(t);
-
-    // 2) Crear el contenedor EXACTO para recent.js
+    // ---------- RECENT TRACKS (estructura oficial) ----------
     const recent = document.createElement("div");
     recent.className = "rbcloud_recenttracks";
     recent.id = `rbcloud_recent${widRecent}`;
     recent.setAttribute("data-cnt", "10");
+
+    // Plantilla (RadioBOSS la clona / rellena)
     recent.innerHTML = `
-      <div class='rbcloud_recent_track' style='display:flex;align-items:center;margin-bottom:5pt;'>
-        <div class='rbcloud_recent_track_cover' data-size='65'></div>
-        <div style='margin-left:5pt;'>
-          <div class='rbcloud_recent_artist' style='font-weight:bold'></div>
-          <div class='rbcloud_recent_title'>...</div>
+      <div class="rbcloud_recent_track" style="display:flex;align-items:center;margin-bottom:5pt;">
+        <div class="rbcloud_recent_track_cover" data-size="65"></div>
+        <div style="margin-left:5pt;">
+          <div class="rbcloud_recent_artist" style="font-weight:bold"></div>
+          <div class="rbcloud_recent_title">...</div>
         </div>
       </div>
     `;
-    document.getElementById("recent_host").appendChild(recent);
 
-    // 3) Cargar scripts oficiales
+    document.getElementById("recent_mount").appendChild(recent);
+
+    // ---------- Cargar scripts oficiales ----------
     const tfParam = tf ? `&tf=${encodeURIComponent(tf)}` : "";
     npStatus.textContent = "Cargando Now Playing…";
     rtStatus.textContent = "Cargando Recientes…";
@@ -189,38 +203,32 @@
     inject(`${host}/w/nowplaying2.js?u=${encodeURIComponent(u)}&wid=${encodeURIComponent(widNow)}${tfParam}`);
     inject(`${host}/w/recent.js?u=${encodeURIComponent(u)}&wid=${encodeURIComponent(widRecent)}&v=2${tfParam}`);
 
-    // 4) Mostrar en UI el texto que RadioBOSS llena
-    function sync(){
-      const aa = document.getElementById(`rbcloud_np_a${widNow}`);
-      const tt = document.getElementById(`rbcloud_np_t${widNow}`);
-
-      const artist = (aa?.textContent || "").trim();
-      const title = (tt?.textContent || "").trim();
-
-      if(artist) document.getElementById("np_artist").textContent = artist;
-      if(title && title !== "...") document.getElementById("np_title").textContent = title;
-
-      if(artist || (title && title !== "...")){
-        npStatus.textContent = "OK";
-      }
-      // Para recientes no hay “señal” simple, pero si el DOM crece, asumimos OK:
-      const recentEl = document.getElementById(`rbcloud_recent${widRecent}`);
-      const items = recentEl ? recentEl.querySelectorAll(".rbcloud_recent_track").length : 0;
-      if(items > 1){
-        rtStatus.textContent = "OK";
-      }
-    }
-
-    setInterval(sync, 800);
-    setTimeout(sync, 1200);
+    // ---------- Monitor de estado ----------
     setTimeout(() => {
-      // Si a los 8s no hay datos, marcamos error
-      const artist = document.getElementById("np_artist").textContent.trim();
-      if(artist === "Cargando…" || artist === ""){
-        npStatus.textContent = "Sin datos (verifica host/u/widNow/widRecent).";
+      const artistEl = document.getElementById(`rbcloud_np_a${widNow}`);
+      const titleEl  = document.getElementById(`rbcloud_np_t${widNow}`);
+
+      const artist = (artistEl?.textContent || "").trim();
+      const title  = (titleEl?.textContent  || "").trim();
+
+      if (artist || (title && title !== "...")) {
+        npStatus.textContent = "OK";
+      } else {
+        npStatus.textContent = "Sin datos (verifica host/u/widNow).";
         npStatus.classList.add("err");
       }
-    }, 8000);
+
+      const recentEl = document.getElementById(`rbcloud_recent${widRecent}`);
+      const items = recentEl ? recentEl.querySelectorAll(".rbcloud_recent_track").length : 0;
+
+      // Si quedan solo 1 template, asumimos no cargó
+      if (items > 1) {
+        rtStatus.textContent = "OK";
+      } else {
+        rtStatus.textContent = "Sin datos (verifica host/u/widRecent).";
+        rtStatus.classList.add("err");
+      }
+    }, 5000);
   </script>
 </body>
 </html>
