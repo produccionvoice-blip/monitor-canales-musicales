@@ -3,86 +3,89 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>RadioBOSS Monitor</title>
+  <title>RadioBOSS Monitor Widget</title>
 
   <style>
     body{
       margin:0;
-      font-family: Arial, sans-serif;
+      font-family: Arial, Helvetica, sans-serif;
       color:#e5e7eb;
       background: transparent;
     }
+
     .wrap{
       display:flex;
       flex-direction:column;
       gap:12px;
       padding:12px;
     }
+
     .card{
       border:1px solid rgba(255,255,255,.10);
       border-radius:12px;
       background: rgba(255,255,255,.04);
       padding:12px;
     }
+
     .label{
       font-size:11px;
       opacity:.75;
       letter-spacing:.6px;
       text-transform: uppercase;
       margin-bottom:10px;
-      font-weight:800;
-    }
-
-    /* NOW PLAYING: solo texto, grande */
-    .npText #npArtist{
-      font-size:14px;
       font-weight:900;
-      line-height:1.2;
-      margin:0 0 4px;
-    }
-    .npText #npTitle{
-      font-size:13px;
-      opacity:.92;
-      line-height:1.2;
-      margin:0;
     }
 
-    /* Ocultar cualquier carátula que el script inserte */
+    /* Monitoreo: ocultar carátulas */
     .rbcloud_nowplaying a,
-    .rbcloud_nowplaying img{
-      display:none !important;
-    }
-
-    /* RECENTS (10): modo playlist */
-    .rbcloud_recenttracks{
-      margin:0;
-      padding:0;
-    }
-    .rbcloud_recent_track{
-      display:block !important;
-      margin:0 !important;
-      padding:6px 0;
-      border-bottom:1px solid rgba(255,255,255,.08);
-    }
-    .rbcloud_recent_track:last-child{
-      border-bottom:0;
-    }
-
-    /* Ocultar carátula en recientes */
+    .rbcloud_nowplaying img,
     .rbcloud_recent_track_cover{
       display:none !important;
     }
 
+    /* Now Playing: tipografía */
+    [id^="rbcloud_np_a"]{
+      font-weight:900 !important;
+      font-size:14px !important;
+      line-height:1.15 !important;
+    }
+    [id^="rbcloud_np_t"]{
+      font-size:13px !important;
+      opacity:.95 !important;
+      line-height:1.15 !important;
+    }
+
+    /* Recientes: lista compacta */
+    .rbcloud_recenttracks .rbcloud_recent_track{
+      display:block !important;
+      margin:0 !important;
+      padding:6px 0 !important;
+      border-bottom:1px solid rgba(255,255,255,.08);
+    }
+    .rbcloud_recenttracks .rbcloud_recent_track:last-child{
+      border-bottom:0;
+    }
     .rbcloud_recent_artist{
       font-weight:900 !important;
-      font-size:12px;
-      line-height:1.15;
+      font-size:12px !important;
+      line-height:1.15 !important;
     }
     .rbcloud_recent_title{
-      font-size:12px;
-      opacity:.92;
-      line-height:1.15;
+      font-size:12px !important;
+      opacity:.92 !important;
+      line-height:1.15 !important;
       margin-top:2px;
+    }
+
+    /* Estado */
+    .status{
+      margin-top:8px;
+      font-size:12px;
+      opacity:.7;
+    }
+    .status.err{
+      opacity:1;
+      color:#fecaca;
     }
   </style>
 </head>
@@ -90,28 +93,28 @@
 <body>
   <div class="wrap">
 
-    <!-- NOW PLAYING (texto) -->
     <div class="card">
       <div class="label">Ahora sonando</div>
 
-      <!-- RadioBOSS requiere estos IDs exactos para widNow -->
-      <div class="npText">
-        <div id="npArtist">Cargando…</div>
-        <div id="npTitle">—</div>
+      <!-- RadioBOSS escribirá aquí (IDs dinámicos) -->
+      <div class="rbcloud_nowplaying" style="display:flex;align-items:center;">
+        <div style="margin-left:0;">
+          <div id="np_artist">Cargando…</div>
+          <div id="np_title">—</div>
+        </div>
       </div>
 
-      <!-- Contenedor real que RadioBOSS llena (oculto) -->
-      <div class="rbcloud_nowplaying" style="display:none;">
-        <div id="rb_np_mount"></div>
-      </div>
+      <div id="np_hidden" style="display:none;"></div>
+      <div id="np_status" class="status">Inicializando…</div>
     </div>
 
-    <!-- RECENTS -->
     <div class="card">
       <div class="label">Recientes (10)</div>
 
-      <!-- RadioBOSS llenará este contenedor con widRecent -->
-      <div class="rbcloud_recenttracks" id="rb_recent_mount" data-cnt="10"></div>
+      <!-- RadioBOSS necesita un contenedor con ID rbcloud_recent{widRecent} -->
+      <div id="recent_host"></div>
+
+      <div id="rt_status" class="status">Inicializando…</div>
     </div>
 
   </div>
@@ -119,59 +122,105 @@
   <script>
     const p = new URLSearchParams(location.search);
 
-    const host = p.get("host");
-    const u = p.get("u");
-    const widNow = p.get("widNow");
-    const widRecent = p.get("widRecent");
-    const tf = p.get("tf");
+    const host = (p.get("host") || "").trim();
+    const u = (p.get("u") || "").trim();
+    const widNow = (p.get("widNow") || "").trim();
+    const widRecent = (p.get("widRecent") || "").trim();
+    const tf = (p.get("tf") || "").trim();
+
+    const npStatus = document.getElementById("np_status");
+    const rtStatus = document.getElementById("rt_status");
 
     function inject(src){
       const s = document.createElement("script");
       s.src = src;
       s.async = true;
+      s.onerror = () => console.error("No se pudo cargar:", src);
       document.body.appendChild(s);
     }
 
-    // Validación
-    if (!host || !u || !widNow || !widRecent) {
-      document.body.innerHTML = "<div style='padding:12px;font-family:Arial;color:#e5e7eb'>Faltan parámetros (host/u/widNow/widRecent).</div>";
+    function fail(msg){
+      npStatus.textContent = msg;
+      npStatus.classList.add("err");
+      rtStatus.textContent = msg;
+      rtStatus.classList.add("err");
+    }
+
+    if(!host || !u || !widNow || !widRecent){
+      fail('Faltan parámetros. Se requieren: host, u, widNow, widRecent.');
       throw new Error("Missing params");
     }
 
-    // 1) Crear los IDs EXACTOS que RadioBOSS llena
-    // Now Playing: rbcloud_np_a{widNow}, rbcloud_np_t{widNow} (+ cover opcional)
-    const artistHidden = document.createElement("div");
-    artistHidden.id = `rbcloud_np_a${widNow}`;
-    const titleHidden = document.createElement("div");
-    titleHidden.id = `rbcloud_np_t${widNow}`;
-    titleHidden.textContent = "...";
+    // 1) Crear los IDs EXACTOS que nowplaying2.js llena
+    const hidden = document.getElementById("np_hidden");
 
-    // Montarlos en el DOM (ocultos) para que el script los encuentre
-    const npMount = document.getElementById("rb_np_mount");
-    npMount.appendChild(artistHidden);
-    npMount.appendChild(titleHidden);
+    const a = document.createElement("div");
+    a.id = `rbcloud_np_a${widNow}`;
+    a.style.fontWeight = "bold";
 
-    // Recientes: rbcloud_recent{widRecent}
-    const recentMount = document.getElementById("rb_recent_mount");
-    recentMount.id = `rbcloud_recent${widRecent}`; // ESTE ID es obligatorio para recent.js
+    const t = document.createElement("div");
+    t.id = `rbcloud_np_t${widNow}`;
+    t.textContent = "...";
 
-    // 2) Inyectar scripts oficiales
-    inject(`${host}/w/nowplaying2.js?u=${u}&wid=${widNow}${tf ? `&tf=${tf}` : ""}`);
-    inject(`${host}/w/recent.js?u=${u}&wid=${widRecent}&v=2${tf ? `&tf=${tf}` : ""}`);
+    hidden.appendChild(a);
+    hidden.appendChild(t);
 
-    // 3) Reflejar el texto al UI visible
+    // 2) Crear el contenedor EXACTO para recent.js
+    const recent = document.createElement("div");
+    recent.className = "rbcloud_recenttracks";
+    recent.id = `rbcloud_recent${widRecent}`;
+    recent.setAttribute("data-cnt", "10");
+    recent.innerHTML = `
+      <div class='rbcloud_recent_track' style='display:flex;align-items:center;margin-bottom:5pt;'>
+        <div class='rbcloud_recent_track_cover' data-size='65'></div>
+        <div style='margin-left:5pt;'>
+          <div class='rbcloud_recent_artist' style='font-weight:bold'></div>
+          <div class='rbcloud_recent_title'>...</div>
+        </div>
+      </div>
+    `;
+    document.getElementById("recent_host").appendChild(recent);
+
+    // 3) Cargar scripts oficiales
+    const tfParam = tf ? `&tf=${encodeURIComponent(tf)}` : "";
+    npStatus.textContent = "Cargando Now Playing…";
+    rtStatus.textContent = "Cargando Recientes…";
+
+    inject(`${host}/w/nowplaying2.js?u=${encodeURIComponent(u)}&wid=${encodeURIComponent(widNow)}${tfParam}`);
+    inject(`${host}/w/recent.js?u=${encodeURIComponent(u)}&wid=${encodeURIComponent(widRecent)}&v=2${tfParam}`);
+
+    // 4) Mostrar en UI el texto que RadioBOSS llena
     function sync(){
-      const a = document.getElementById(`rbcloud_np_a${widNow}`);
-      const t = document.getElementById(`rbcloud_np_t${widNow}`);
-      const artist = (a && a.textContent || "").trim();
-      const title  = (t && t.textContent || "").trim();
+      const aa = document.getElementById(`rbcloud_np_a${widNow}`);
+      const tt = document.getElementById(`rbcloud_np_t${widNow}`);
 
-      if (artist) document.getElementById("npArtist").textContent = artist;
-      if (title && title !== "...") document.getElementById("npTitle").textContent = title;
+      const artist = (aa?.textContent || "").trim();
+      const title = (tt?.textContent || "").trim();
+
+      if(artist) document.getElementById("np_artist").textContent = artist;
+      if(title && title !== "...") document.getElementById("np_title").textContent = title;
+
+      if(artist || (title && title !== "...")){
+        npStatus.textContent = "OK";
+      }
+      // Para recientes no hay “señal” simple, pero si el DOM crece, asumimos OK:
+      const recentEl = document.getElementById(`rbcloud_recent${widRecent}`);
+      const items = recentEl ? recentEl.querySelectorAll(".rbcloud_recent_track").length : 0;
+      if(items > 1){
+        rtStatus.textContent = "OK";
+      }
     }
 
     setInterval(sync, 800);
-    sync();
+    setTimeout(sync, 1200);
+    setTimeout(() => {
+      // Si a los 8s no hay datos, marcamos error
+      const artist = document.getElementById("np_artist").textContent.trim();
+      if(artist === "Cargando…" || artist === ""){
+        npStatus.textContent = "Sin datos (verifica host/u/widNow/widRecent).";
+        npStatus.classList.add("err");
+      }
+    }, 8000);
   </script>
 </body>
 </html>
