@@ -1,4 +1,4 @@
-// client.js – Detalle por cliente (client.html?id=xxxx)
+// client.js – Detalle por cliente (URL: /client/?id=xxxx)
 const view = document.getElementById("clientView");
 const titleEl = document.getElementById("clientTitle");
 const subtitleEl = document.getElementById("clientSubtitle");
@@ -7,17 +7,19 @@ const params = new URLSearchParams(location.search);
 const id = (params.get("id") || "").trim();
 
 if (!id) {
-  renderError(`Falta el parámetro "id" en la URL. Ejemplo: client.html?id=pepe-ganga`);
+  renderError(`Falta el parámetro "id" en la URL. Ejemplo: /client/?id=pepe-ganga`);
 } else {
   loadClient(id);
 }
 
 function loadClient(clientId) {
-  fetch("channels.json", { cache: "no-store" })
+  fetch("../channels.json", { cache: "no-store" })
     .then((r) => r.json())
     .then((list) => {
       const channels = Array.isArray(list) ? list : [];
-      const client = channels.find((c) => String(c.id || "").toLowerCase() === clientId.toLowerCase());
+      const client = channels.find(
+        (c) => String(c.id || "").toLowerCase() === clientId.toLowerCase()
+      );
 
       if (!client) {
         renderError(`No se encontró el cliente con id: "${escapeHtml(clientId)}"`);
@@ -37,11 +39,9 @@ function renderClient(client) {
   const url = String(client.url || "").trim();
   const rb = client.rb || null;
 
-  // Títulos de la página
   if (titleEl) titleEl.textContent = `Monitor: ${name}`;
   if (subtitleEl) subtitleEl.textContent = `Voice Experience - Musicar | ID: ${client.id}`;
 
-  // Iframe widget
   let iframeSrc = "";
   if (rb && rb.host && rb.u && rb.widNow && rb.widRecent) {
     const q = new URLSearchParams({
@@ -51,7 +51,9 @@ function renderClient(client) {
       widRecent: String(rb.widRecent)
     });
     if (rb.tf) q.set("tf", String(rb.tf));
-    iframeSrc = `widget.html?${q.toString()}`;
+
+    // Estamos en /client/ => widget está en raíz
+    iframeSrc = `../widget.html?${q.toString()}`;
   }
 
   view.innerHTML = `
