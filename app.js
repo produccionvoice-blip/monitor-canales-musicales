@@ -37,7 +37,7 @@ function renderHome(list) {
       <h3>${safeName}</h3>
       ${
         id
-          ? `<a href="client.html?id=${safeId}">Ver monitor</a>`
+          ? `<a href="client/?id=${safeId}">Ver monitor</a>`
           : `<div class="error">Falta "id" para este cliente en channels.json</div>`
       }
     `;
