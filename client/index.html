@@ -3,29 +3,42 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title id="pageTitle">Monitor de Cliente | Musicar</title>
-  <link rel="stylesheet" href="../styles.css" />
+  <title>Monitor - Musicar</title>
+  <link rel="stylesheet" href="/styles.css" />
 </head>
+
 <body>
   <header>
-    <a class="backLink" href="../index.html">← Volver</a>
-    <img class="logo" src="../Logo_Musicar.png" alt="Musicar" />
-    <h1 id="clientName">Cargando…</h1>
-    <p id="clientMeta">Voice Experience - Musicar</p>
+    <a class="backLink" href="/">← Volver</a>
+    <img class="logo" src="/Logo_Musicar.png" alt="Musicar" />
+    <h1 id="pageTitle">Cargando...</h1>
+    <p id="pageSub">Voice Experience - Musicar</p>
   </header>
 
   <main>
-    <div class="clientPanel">
-      <audio id="player" controls preload="none" crossorigin="anonymous"></audio>
-
-      <div class="rb-frame-wrap">
-        <iframe id="rbFrame" class="rb-frame" title="Now Playing & Recientes" loading="lazy"></iframe>
+    <section class="clientPanel">
+      <div class="clientTop">
+        <div class="clientName" id="clientName">—</div>
+        <audio id="player" controls preload="none"></audio>
+        <div id="audioError" class="error" style="display:none;"></div>
       </div>
-    </div>
+
+      <div class="clientBottom">
+        <iframe
+          id="rbFrame"
+          class="rb-frame"
+          title="Now Playing y Recientes"
+          loading="lazy"
+          referrerpolicy="no-referrer"
+        ></iframe>
+
+        <div id="widgetError" class="error" style="display:none;"></div>
+      </div>
+    </section>
   </main>
 
   <footer>© Musicar - Conectando sentidos</footer>
 
-  <script src="../client.js"></script>
+  <script src="/client.js" defer></script>
 </body>
 </html>
