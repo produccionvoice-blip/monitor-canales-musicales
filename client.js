@@ -1,63 +1,49 @@
-// client.js
-const $ = (id) => document.getElementById(id);
+// client/client.js — Solo reproductor
+(async function () {
+  const title = document.getElementById("title");
+  const clientName = document.getElementById("clientName");
+  const player = document.getElementById("player");
+  const msg = document.getElementById("msg");
 
-function qs(name) {
-  return new URLSearchParams(location.search).get(name);
-}
+  const id = new URLSearchParams(location.search).get("id");
 
-async function loadClient() {
-  const id = (qs("id") || "").trim();
+  function setMsg(text, isError = false) {
+    msg.textContent = text;
+    msg.className = isError ? "error" : "hint";
+  }
 
   if (!id) {
-    $("pageTitle").textContent = "Cliente no especificado";
-    $("clientName").textContent = "—";
-    $("widgetError").style.display = "block";
-    $("widgetError").textContent = "Falta el parámetro ?id= en la URL.";
+    title.textContent = "Cliente no especificado";
+    clientName.textContent = "—";
+    setMsg("Falta el parámetro ?id= en la URL.", true);
     return;
   }
 
-  let channels;
+  let channels = [];
   try {
-    const res = await fetch(`/channels.json?v=${Date.now()}`, { cache: "no-store" });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const res = await fetch("../channels.json?v=" + Date.now(), { cache: "no-store" });
+    if (!res.ok) throw new Error("HTTP " + res.status);
     channels = await res.json();
   } catch (e) {
-    $("pageTitle").textContent = "Error";
-    $("widgetError").style.display = "block";
-    $("widgetError").textContent = `No se pudo cargar channels.json: ${e.message}`;
+    title.textContent = "Error";
+    clientName.textContent = "—";
+    setMsg("No se pudo leer channels.json: " + e.message, true);
     return;
   }
 
   const ch = channels.find((c) => c.id === id);
-
   if (!ch) {
-    $("pageTitle").textContent = "Cliente no encontrado";
-    $("clientName").textContent = id;
-    $("widgetError").style.display = "block";
-    $("widgetError").textContent = `No existe un cliente con id="${id}" en channels.json.`;
+    title.textContent = "Cliente no encontrado";
+    clientName.textContent = "—";
+    setMsg(`No existe el cliente con id="${id}" en channels.json`, true);
     return;
   }
 
-  // Títulos
-  $("pageTitle").textContent = `Monitor: ${ch.name}`;
-  $("clientName").textContent = ch.name;
-  document.title = `Monitor - ${ch.name} | Musicar`;
+  title.textContent = `Monitor: ${ch.name}`;
+  clientName.textContent = ch.name;
 
-  // Audio
-  const audio = $("player");
-  audio.src = ch.streamUrl;
-  audio.crossOrigin = "anonymous";
-  audio.load();
+  // Reproductor
+  player.src = ch.stream;
+  setMsg("Listo. Presiona Play para escuchar el canal.");
+})();
 
-  audio.addEventListener("error", () => {
-    $("audioError").style.display = "block";
-    $("audioError").textContent =
-      "El stream no pudo cargarse. Verifica que el streamUrl funcione y sea accesible por HTTPS.";
-  });
-
-  // Widget (iframe): el widget.html hará fetch de channels.json y pintará NowPlaying + Recientes
-  const frame = $("rbFrame");
-  frame.src = `/widget.html?id=${encodeURIComponent(id)}&v=${Date.now()}`;
-}
-
-loadClient();
