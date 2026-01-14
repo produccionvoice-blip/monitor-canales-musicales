@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>RadioBOSS Widget</title>
+  <title>Widget RadioBOSS</title>
 
   <style>
     body{
@@ -21,7 +21,7 @@
     .card{
       border:1px solid rgba(255,255,255,.10);
       border-radius:12px;
-      background: rgba(255,255,255,.04);
+      background: rgba(2,6,23,.55);
       padding:12px;
     }
     .label{
@@ -33,7 +33,7 @@
       font-weight:900;
     }
 
-    /* Monitoreo: ocultamos carátulas pero dejamos la estructura para que el script pinte datos */
+    /* Monitoreo: ocultar carátulas / miniaturas (pero dejamos el HTML porque RadioBOSS lo necesita) */
     .rbcloud_nowplaying a,
     .rbcloud_nowplaying img,
     .rbcloud_recent_track_cover{
@@ -53,16 +53,15 @@
       margin-top:2px;
     }
 
-    /* Recent list compacta */
+    /* Recent list */
     .rbcloud_recenttracks .rbcloud_recent_track{
       display:block !important;
       margin:0 !important;
       padding:6px 0 !important;
       border-bottom:1px solid rgba(255,255,255,.08);
     }
-    .rbcloud_recenttracks .rbcloud_recent_track:last-child{
-      border-bottom:0;
-    }
+    .rbcloud_recenttracks .rbcloud_recent_track:last-child{ border-bottom:0; }
+
     .rbcloud_recent_artist{
       font-weight:900 !important;
       font-size:12px !important;
@@ -80,9 +79,24 @@
       font-size:12px;
       opacity:.7;
     }
-    .status.err{
-      opacity:1;
+    .status.err{ opacity:1; color:#fecaca; }
+
+    .error{
+      font-size:12px;
       color:#fecaca;
+      padding:10px;
+      border:1px solid rgba(239,68,68,.35);
+      border-radius:10px;
+      background: rgba(239,68,68,.12);
+      white-space: pre-wrap;
+      margin-top:10px;
+    }
+
+    .debug{
+      margin-top:8px;
+      font-size:11px;
+      opacity:.7;
+      line-height:1.25;
     }
   </style>
 </head>
@@ -91,119 +105,180 @@
   <div class="wrap">
     <div class="card">
       <div class="label">Ahora sonando</div>
-      <div id="nowPlayingMount"></div>
+      <div id="nowMount"></div>
       <div id="np_status" class="status">Inicializando…</div>
+      <div id="np_debug" class="debug"></div>
+      <div id="np_error" class="error" style="display:none"></div>
     </div>
 
     <div class="card">
       <div class="label">Recientes (10)</div>
       <div id="recentMount"></div>
       <div id="rt_status" class="status">Inicializando…</div>
+      <div id="rt_debug" class="debug"></div>
+      <div id="rt_error" class="error" style="display:none"></div>
     </div>
   </div>
 
   <script>
-    const p = new URLSearchParams(location.search);
-
-    const hostRaw = (p.get("host") || "").trim();
-    const u = (p.get("u") || "").trim();
-    const widNow = (p.get("widNow") || "").trim();
-    const widRecent = (p.get("widRecent") || "").trim();
-    const tf = (p.get("tf") || "").trim();
+    const qs = new URLSearchParams(location.search);
+    const id = (qs.get("id") || "").trim();
+    const cb = (qs.get("cb") || "0").trim(); // cache buster: 1 = ON
 
     const npStatus = document.getElementById("np_status");
     const rtStatus = document.getElementById("rt_status");
+    const npDebug  = document.getElementById("np_debug");
+    const rtDebug  = document.getElementById("rt_debug");
+    const npError  = document.getElementById("np_error");
+    const rtError  = document.getElementById("rt_error");
 
-    function fail(msg){
-      npStatus.textContent = msg;
-      npStatus.classList.add("err");
-      rtStatus.textContent = msg;
-      rtStatus.classList.add("err");
+    function showErr(el, msg){
+      el.style.display = "block";
+      el.textContent = msg;
+    }
+    function setErrStatus(el, msg){
+      el.textContent = msg;
+      el.classList.add("err");
     }
 
-    let host;
-    try{
-      const url = new URL(hostRaw);
-      if(url.protocol !== "https:") throw new Error("Host debe ser https");
-      host = url.origin; // https://c9.radioboss.fm
-    }catch(e){
-      fail("Host inválido. Debe ser algo como https://c9.radioboss.fm");
-      throw e;
+    // Normaliza por si algún link viene pegado con &amp;
+    function normalizeUrl(u){
+      return String(u || "").replaceAll("&amp;", "&");
     }
 
-    if(!u || !widNow || !widRecent){
-      fail("Faltan parámetros: u, widNow o widRecent.");
-      throw new Error("Missing params");
+    function injectScript(src){
+      src = normalizeUrl(src);
+
+      if(cb === "1"){
+        const join = src.includes("?") ? "&" : "?";
+        src = src + join + "_cb=" + Date.now();
+      }
+
+      return new Promise((resolve, reject) => {
+        const s = document.createElement("script");
+        s.src = src;
+        s.async = true;
+        s.onload = resolve;
+        s.onerror = () => reject(new Error("No se pudo cargar: " + src));
+        document.body.appendChild(s);
+      });
     }
 
-    // NOW PLAYING (estructura exacta esperada por nowplaying2.js)
-    document.getElementById("nowPlayingMount").innerHTML = `
-      <div class="rbcloud_nowplaying" style="display:flex;align-items:center;">
-        <div>
-          <a target="_blank" href="${host}/w/artwork/${encodeURIComponent(u)}.jpg">
-            <img id="rbcloud_np_c${widNow}"
-                 src="${host}/w/artwork/${encodeURIComponent(u)}.jpg"
-                 width="65" height="65" alt="cover art">
-          </a>
-        </div>
-        <div style="margin-left:5pt;">
-          <div id="rbcloud_np_a${widNow}" style="font-weight:bold"></div>
-          <div id="rbcloud_np_t${widNow}">...</div>
-        </div>
-      </div>
-    `;
+    async function main(){
+      if(!id){
+        showErr(npError, "Falta ?id= en la URL. Ej: widget.html?id=pepe-ganga");
+        showErr(rtError, "Falta ?id= en la URL. Ej: widget.html?id=pepe-ganga");
+        setErrStatus(npStatus, "Sin configuración");
+        setErrStatus(rtStatus, "Sin configuración");
+        return;
+      }
 
-    // RECENT (estructura exacta esperada por recent.js)
-    document.getElementById("recentMount").innerHTML = `
-      <div class="rbcloud_recenttracks" id="rbcloud_recent${widRecent}" data-cnt="10">
-        <div class="rbcloud_recent_track" style="display:flex;align-items:center;margin-bottom:5pt;">
-          <div class="rbcloud_recent_track_cover" data-size="0"></div>
+      let channels;
+      try{
+        const r = await fetch("./channels.json", { cache: "no-store" });
+        channels = await r.json();
+      }catch(e){
+        showErr(npError, "No se pudo leer channels.json");
+        showErr(rtError, "No se pudo leer channels.json");
+        setErrStatus(npStatus, "Error");
+        setErrStatus(rtStatus, "Error");
+        return;
+      }
+
+      const ch = (Array.isArray(channels) ? channels : []).find(x => String(x.id||"") === id);
+      if(!ch || !ch.rb || !ch.rb.now || !ch.rb.recent){
+        showErr(npError, "No existe configuración completa (rb.now / rb.recent) para id=" + id);
+        showErr(rtError, "No existe configuración completa (rb.now / rb.recent) para id=" + id);
+        setErrStatus(npStatus, "Sin configuración");
+        setErrStatus(rtStatus, "Sin configuración");
+        return;
+      }
+
+      // Datos RB
+      const nowWid = ch.rb.now.wid;
+      const nowArtwork = normalizeUrl(ch.rb.now.artwork);
+      const nowScript  = normalizeUrl(ch.rb.now.script);
+
+      const recentWid   = ch.rb.recent.wid;
+      const recentCount = Number(ch.rb.recent.count || 10);
+      const recentSize  = Number(ch.rb.recent.coverSize ?? 0);
+      const recentScript = normalizeUrl(ch.rb.recent.script);
+
+      // Render NOW (estructura exacta: IDs con wid)
+      document.getElementById("nowMount").innerHTML = `
+        <div class="rbcloud_nowplaying" style="display:flex;align-items:center;">
+          <div>
+            <a target="_blank" href="${nowArtwork}">
+              <img id="rbcloud_np_c${nowWid}" src="${nowArtwork}" width="65" height="65" alt="cover art">
+            </a>
+          </div>
           <div style="margin-left:5pt;">
-            <div class="rbcloud_recent_artist" style="font-weight:bold"></div>
-            <div class="rbcloud_recent_title">...</div>
+            <div id="rbcloud_np_a${nowWid}" style="font-weight:bold"></div>
+            <div id="rbcloud_np_t${nowWid}">...</div>
           </div>
         </div>
-      </div>
-    `;
+      `;
 
-    const tfParam = tf ? `&tf=${encodeURIComponent(tf)}` : "";
+      // Render RECENT (estructura exacta: id=rbcloud_recent{wid})
+      document.getElementById("recentMount").innerHTML = `
+        <div class="rbcloud_recenttracks" id="rbcloud_recent${recentWid}" data-cnt="${recentCount}">
+          <div class="rbcloud_recent_track" style="display:flex;align-items:center;margin-bottom:5pt;">
+            <div class="rbcloud_recent_track_cover" data-size="${recentSize}"></div>
+            <div style="margin-left:5pt;">
+              <div class="rbcloud_recent_artist" style="font-weight:bold"></div>
+              <div class="rbcloud_recent_title">...</div>
+            </div>
+          </div>
+        </div>
+      `;
 
-    function inject(src){
-      const s = document.createElement("script");
-      s.src = src;
-      s.async = true;
-      s.onerror = () => fail("Error cargando scripts de RadioBOSS (bloqueo o URL incorrecta).");
-      document.body.appendChild(s);
+      npStatus.textContent = "Cargando Now Playing…";
+      rtStatus.textContent = "Cargando Recientes…";
+      npDebug.textContent = `id=${ch.id} | widNow=${nowWid}\n${nowScript}`;
+      rtDebug.textContent = `widRecent=${recentWid} | cnt=${recentCount}\n${recentScript}`;
+
+      // Inyectar scripts (exactos del proveedor)
+      try{
+        await injectScript(nowScript);
+      }catch(e){
+        setErrStatus(npStatus, "Error cargando NowPlaying");
+        showErr(npError, e.message);
+        return;
+      }
+
+      try{
+        await injectScript(recentScript);
+      }catch(e){
+        setErrStatus(rtStatus, "Error cargando Recientes");
+        showErr(rtError, e.message);
+        // no retornamos: puede que Now sí esté ok
+      }
+
+      // Validación (espera a que RadioBOSS pinte datos)
+      setTimeout(() => {
+        const a = (document.getElementById(`rbcloud_np_a${nowWid}`)?.textContent || "").trim();
+        const t = (document.getElementById(`rbcloud_np_t${nowWid}`)?.textContent || "").trim();
+
+        if(a || (t && t !== "...")){
+          npStatus.textContent = "OK";
+        } else {
+          setErrStatus(npStatus, "Sin datos (NOW)");
+          showErr(npError, "RadioBOSS no pintó NowPlaying. Verifica que widNow y el script correspondan al mismo canal.\n" + nowScript);
+        }
+
+        const box = document.getElementById(`rbcloud_recent${recentWid}`);
+        const n = box ? box.querySelectorAll(".rbcloud_recent_track").length : 0;
+
+        if(n > 1){
+          rtStatus.textContent = "OK";
+        } else {
+          setErrStatus(rtStatus, "Sin datos (RECENT)");
+          showErr(rtError, "RadioBOSS no pintó Recientes. Verifica widRecent y script.\n" + recentScript);
+        }
+      }, 6500);
     }
 
-    npStatus.textContent = "Cargando Now Playing…";
-    rtStatus.textContent = "Cargando Recientes…";
-
-    inject(`${host}/w/nowplaying2.js?u=${encodeURIComponent(u)}&wid=${encodeURIComponent(widNow)}${tfParam}`);
-    inject(`${host}/w/recent.js?u=${encodeURIComponent(u)}&wid=${encodeURIComponent(widRecent)}&v=2${tfParam}`);
-
-    // Verificación para mostrar OK/ERROR
-    setTimeout(() => {
-      const artist = (document.getElementById(`rbcloud_np_a${widNow}`)?.textContent || "").trim();
-      const title  = (document.getElementById(`rbcloud_np_t${widNow}`)?.textContent || "").trim();
-
-      if (artist || (title && title !== "...")) {
-        npStatus.textContent = "OK";
-      } else {
-        npStatus.textContent = "Sin datos (verifica host/u/widNow).";
-        npStatus.classList.add("err");
-      }
-
-      const recentEl = document.getElementById(`rbcloud_recent${widRecent}`);
-      const tracks = recentEl ? recentEl.querySelectorAll(".rbcloud_recent_track").length : 0;
-
-      if (tracks > 1) {
-        rtStatus.textContent = "OK";
-      } else {
-        rtStatus.textContent = "Sin datos (verifica host/u/widRecent).";
-        rtStatus.classList.add("err");
-      }
-    }, 5000);
+    main();
   </script>
 </body>
 </html>
