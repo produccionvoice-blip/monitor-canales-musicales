@@ -2,283 +2,230 @@
 <html lang="es">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Widget RadioBOSS</title>
-
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>RadioBOSS Widget</title>
   <style>
-    body{
-      margin:0;
-      font-family: Arial, Helvetica, sans-serif;
-      color:#e5e7eb;
-      background: transparent;
+    :root{
+      --bg: transparent;
+      --text: #e5e7eb;
+      --muted: rgba(229,231,235,.70);
+      --line: rgba(255,255,255,.10);
+      --box: rgba(2,6,23,.55);
+      --box2: rgba(2,6,23,.35);
+      --danger: rgba(239,68,68,.20);
+      --dangerLine: rgba(239,68,68,.45);
     }
-    .wrap{
-      display:flex;
-      flex-direction:column;
-      gap:12px;
-      padding:12px;
+
+    html, body { margin:0; padding:0; background: var(--bg); color: var(--text); font-family: Arial, Helvetica, sans-serif; }
+
+    .wrap { padding: 10px; display:flex; flex-direction:column; gap: 10px; }
+
+    .panel {
+      background: var(--box);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 12px;
     }
-    .card{
-      border:1px solid rgba(255,255,255,.10);
-      border-radius:12px;
-      background: rgba(2,6,23,.55);
-      padding:12px;
-    }
-    .label{
-      font-size:11px;
-      opacity:.75;
-      letter-spacing:.6px;
+
+    .title {
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: .8px;
+      color: var(--muted);
+      margin: 0 0 8px;
       text-transform: uppercase;
-      margin-bottom:10px;
-      font-weight:900;
     }
 
-    /* Monitoreo: ocultar carátulas / miniaturas (pero dejamos el HTML porque RadioBOSS lo necesita) */
-    .rbcloud_nowplaying a,
-    .rbcloud_nowplaying img,
-    .rbcloud_recent_track_cover{
-      display:none !important;
-    }
+    /* Now playing text (IDs are from RadioBOSS) */
+    .npArtist { font-size: 15px; font-weight: 800; line-height: 1.2; margin-bottom: 4px; }
+    .npTitle  { font-size: 14px; opacity: .95; line-height: 1.2; }
 
-    /* Now playing */
-    [id^="rbcloud_np_a"]{
-      font-weight:900 !important;
-      font-size:14px !important;
-      line-height:1.15 !important;
-    }
-    [id^="rbcloud_np_t"]{
-      font-size:13px !important;
-      opacity:.95 !important;
-      line-height:1.15 !important;
-      margin-top:2px;
-    }
+    /* Hide cover art for monitoring */
+    .rbcloud_nowplaying img { display:none !important; }
+    .rbcloud_recent_track_cover { display:none !important; }
 
-    /* Recent list */
-    .rbcloud_recenttracks .rbcloud_recent_track{
-      display:block !important;
-      margin:0 !important;
-      padding:6px 0 !important;
-      border-bottom:1px solid rgba(255,255,255,.08);
+    /* Recent list styling */
+    .rbcloud_recenttracks { display: flex; flex-direction: column; gap: 8px; }
+    .rbcloud_recent_track {
+      background: var(--box2);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 10px;
+      margin: 0 !important;
     }
-    .rbcloud_recenttracks .rbcloud_recent_track:last-child{ border-bottom:0; }
+    .rbcloud_recent_artist { font-weight: 800; font-size: 13px; line-height: 1.2; }
+    .rbcloud_recent_title  { font-size: 13px; opacity: .95; line-height: 1.2; }
 
-    .rbcloud_recent_artist{
-      font-weight:900 !important;
-      font-size:12px !important;
-      line-height:1.15 !important;
-    }
-    .rbcloud_recent_title{
-      font-size:12px !important;
-      opacity:.92 !important;
-      line-height:1.15 !important;
-      margin-top:2px;
-    }
+    .hint { margin-top: 8px; font-size: 12px; color: var(--muted); }
 
-    .status{
-      margin-top:8px;
-      font-size:12px;
-      opacity:.7;
-    }
-    .status.err{ opacity:1; color:#fecaca; }
-
-    .error{
-      font-size:12px;
-      color:#fecaca;
-      padding:10px;
-      border:1px solid rgba(239,68,68,.35);
-      border-radius:10px;
-      background: rgba(239,68,68,.12);
+    .err {
+      margin-top: 10px;
+      background: var(--danger);
+      border: 1px solid var(--dangerLine);
+      border-radius: 10px;
+      padding: 10px;
+      font-size: 12px;
+      line-height: 1.35;
+      display:none;
       white-space: pre-wrap;
-      margin-top:10px;
-    }
-
-    .debug{
-      margin-top:8px;
-      font-size:11px;
-      opacity:.7;
-      line-height:1.25;
     }
   </style>
 </head>
-
 <body>
   <div class="wrap">
-    <div class="card">
-      <div class="label">Ahora sonando</div>
-      <div id="nowMount"></div>
-      <div id="np_status" class="status">Inicializando…</div>
-      <div id="np_debug" class="debug"></div>
-      <div id="np_error" class="error" style="display:none"></div>
+    <div class="panel" id="nowPanel">
+      <div class="title">Ahora sonando</div>
+
+      <!-- RadioBOSS NowPlaying skeleton (must exist BEFORE script runs) -->
+      <div class="rbcloud_nowplaying" style="display:flex; align-items:flex-start;">
+        <div>
+          <a id="npArtLink" target="_blank">
+            <img id="npCover" alt="cover art">
+          </a>
+        </div>
+
+        <div style="margin-left: 0;">
+          <div id="npArtist" class="npArtist"></div>
+          <div id="npTitle" class="npTitle">Cargando...</div>
+        </div>
+      </div>
+
+      <div class="err" id="errNow"></div>
     </div>
 
-    <div class="card">
-      <div class="label">Recientes (10)</div>
-      <div id="recentMount"></div>
-      <div id="rt_status" class="status">Inicializando…</div>
-      <div id="rt_debug" class="debug"></div>
-      <div id="rt_error" class="error" style="display:none"></div>
+    <div class="panel" id="recentPanel">
+      <div class="title" id="recentTitle">Recientes (10)</div>
+
+      <!-- RadioBOSS RecentTracks skeleton (must exist BEFORE script runs) -->
+      <div class="rbcloud_recenttracks" id="recentRoot" data-cnt="10">
+        <div class="rbcloud_recent_track" style="display:flex; align-items:center;">
+          <div class="rbcloud_recent_track_cover" data-size="0"></div>
+          <div style="margin-left: 0;">
+            <div class="rbcloud_recent_artist"></div>
+            <div class="rbcloud_recent_title">...</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="err" id="errRecent"></div>
     </div>
   </div>
 
   <script>
-    const qs = new URLSearchParams(location.search);
-    const id = (qs.get("id") || "").trim();
-    const cb = (qs.get("cb") || "0").trim(); // cache buster: 1 = ON
-
-    const npStatus = document.getElementById("np_status");
-    const rtStatus = document.getElementById("rt_status");
-    const npDebug  = document.getElementById("np_debug");
-    const rtDebug  = document.getElementById("rt_debug");
-    const npError  = document.getElementById("np_error");
-    const rtError  = document.getElementById("rt_error");
-
-    function showErr(el, msg){
-      el.style.display = "block";
-      el.textContent = msg;
-    }
-    function setErrStatus(el, msg){
-      el.textContent = msg;
-      el.classList.add("err");
+    function getParam(name, fallback = "") {
+      const v = new URLSearchParams(location.search).get(name);
+      return (v === null || v === undefined || v === "") ? fallback : v;
     }
 
-    // Normaliza por si algún link viene pegado con &amp;
-    function normalizeUrl(u){
-      return String(u || "").replaceAll("&amp;", "&");
+    function normalizeHost(h) {
+      if (!h) return "";
+      if (h.startsWith("http://") || h.startsWith("https://")) return h.replace(/\/+$/,"");
+      return ("https://" + h).replace(/\/+$/,"");
     }
 
-    function injectScript(src){
-      src = normalizeUrl(src);
-
-      if(cb === "1"){
-        const join = src.includes("?") ? "&" : "?";
-        src = src + join + "_cb=" + Date.now();
-      }
-
-      return new Promise((resolve, reject) => {
-        const s = document.createElement("script");
-        s.src = src;
-        s.async = true;
-        s.onload = resolve;
-        s.onerror = () => reject(new Error("No se pudo cargar: " + src));
-        document.body.appendChild(s);
-      });
+    function injectScript(src, onError) {
+      const s = document.createElement("script");
+      s.src = src;
+      s.async = true;
+      s.onerror = () => onError && onError("No se pudo cargar: " + src);
+      document.body.appendChild(s);
+      return s;
     }
 
-    async function main(){
-      if(!id){
-        showErr(npError, "Falta ?id= en la URL. Ej: widget.html?id=pepe-ganga");
-        showErr(rtError, "Falta ?id= en la URL. Ej: widget.html?id=pepe-ganga");
-        setErrStatus(npStatus, "Sin configuración");
-        setErrStatus(rtStatus, "Sin configuración");
-        return;
-      }
+    // Read params
+    const host = normalizeHost(getParam("host"));
+    const u = getParam("u");
+    const widNow = getParam("widNow");
+    const widRecent = getParam("widRecent");
+    const tf = getParam("tf", "0") === "1";
+    const cnt = parseInt(getParam("cnt", "10"), 10) || 10;
+    const coverSize = parseInt(getParam("coverSize", "0"), 10) || 0;
 
-      let channels;
-      try{
-        const r = await fetch("./channels.json", { cache: "no-store" });
-        channels = await r.json();
-      }catch(e){
-        showErr(npError, "No se pudo leer channels.json");
-        showErr(rtError, "No se pudo leer channels.json");
-        setErrStatus(npStatus, "Error");
-        setErrStatus(rtStatus, "Error");
-        return;
-      }
+    const errNow = document.getElementById("errNow");
+    const errRecent = document.getElementById("errRecent");
 
-      const ch = (Array.isArray(channels) ? channels : []).find(x => String(x.id||"") === id);
-      if(!ch || !ch.rb || !ch.rb.now || !ch.rb.recent){
-        showErr(npError, "No existe configuración completa (rb.now / rb.recent) para id=" + id);
-        showErr(rtError, "No existe configuración completa (rb.now / rb.recent) para id=" + id);
-        setErrStatus(npStatus, "Sin configuración");
-        setErrStatus(rtStatus, "Sin configuración");
-        return;
-      }
-
-      // Datos RB
-      const nowWid = ch.rb.now.wid;
-      const nowArtwork = normalizeUrl(ch.rb.now.artwork);
-      const nowScript  = normalizeUrl(ch.rb.now.script);
-
-      const recentWid   = ch.rb.recent.wid;
-      const recentCount = Number(ch.rb.recent.count || 10);
-      const recentSize  = Number(ch.rb.recent.coverSize ?? 0);
-      const recentScript = normalizeUrl(ch.rb.recent.script);
-
-      // Render NOW (estructura exacta: IDs con wid)
-      document.getElementById("nowMount").innerHTML = `
-        <div class="rbcloud_nowplaying" style="display:flex;align-items:center;">
-          <div>
-            <a target="_blank" href="${nowArtwork}">
-              <img id="rbcloud_np_c${nowWid}" src="${nowArtwork}" width="65" height="65" alt="cover art">
-            </a>
-          </div>
-          <div style="margin-left:5pt;">
-            <div id="rbcloud_np_a${nowWid}" style="font-weight:bold"></div>
-            <div id="rbcloud_np_t${nowWid}">...</div>
-          </div>
-        </div>
-      `;
-
-      // Render RECENT (estructura exacta: id=rbcloud_recent{wid})
-      document.getElementById("recentMount").innerHTML = `
-        <div class="rbcloud_recenttracks" id="rbcloud_recent${recentWid}" data-cnt="${recentCount}">
-          <div class="rbcloud_recent_track" style="display:flex;align-items:center;margin-bottom:5pt;">
-            <div class="rbcloud_recent_track_cover" data-size="${recentSize}"></div>
-            <div style="margin-left:5pt;">
-              <div class="rbcloud_recent_artist" style="font-weight:bold"></div>
-              <div class="rbcloud_recent_title">...</div>
-            </div>
-          </div>
-        </div>
-      `;
-
-      npStatus.textContent = "Cargando Now Playing…";
-      rtStatus.textContent = "Cargando Recientes…";
-      npDebug.textContent = `id=${ch.id} | widNow=${nowWid}\n${nowScript}`;
-      rtDebug.textContent = `widRecent=${recentWid} | cnt=${recentCount}\n${recentScript}`;
-
-      // Inyectar scripts (exactos del proveedor)
-      try{
-        await injectScript(nowScript);
-      }catch(e){
-        setErrStatus(npStatus, "Error cargando NowPlaying");
-        showErr(npError, e.message);
-        return;
-      }
-
-      try{
-        await injectScript(recentScript);
-      }catch(e){
-        setErrStatus(rtStatus, "Error cargando Recientes");
-        showErr(rtError, e.message);
-        // no retornamos: puede que Now sí esté ok
-      }
-
-      // Validación (espera a que RadioBOSS pinte datos)
-      setTimeout(() => {
-        const a = (document.getElementById(`rbcloud_np_a${nowWid}`)?.textContent || "").trim();
-        const t = (document.getElementById(`rbcloud_np_t${nowWid}`)?.textContent || "").trim();
-
-        if(a || (t && t !== "...")){
-          npStatus.textContent = "OK";
-        } else {
-          setErrStatus(npStatus, "Sin datos (NOW)");
-          showErr(npError, "RadioBOSS no pintó NowPlaying. Verifica que widNow y el script correspondan al mismo canal.\n" + nowScript);
-        }
-
-        const box = document.getElementById(`rbcloud_recent${recentWid}`);
-        const n = box ? box.querySelectorAll(".rbcloud_recent_track").length : 0;
-
-        if(n > 1){
-          rtStatus.textContent = "OK";
-        } else {
-          setErrStatus(rtStatus, "Sin datos (RECENT)");
-          showErr(rtError, "RadioBOSS no pintó Recientes. Verifica widRecent y script.\n" + recentScript);
-        }
-      }, 6500);
+    if (!host || !u || !widNow || !widRecent) {
+      errNow.style.display = "block";
+      errNow.textContent = "Faltan parámetros. Requiere host, u, widNow, widRecent.";
+      errRecent.style.display = "block";
+      errRecent.textContent = "Faltan parámetros. Requiere host, u, widNow, widRecent.";
+      throw new Error("Missing params");
     }
 
-    main();
+    // Build exact IDs RadioBOSS expects
+    // NowPlaying expects: rbcloud_np_c{wid}, rbcloud_np_a{wid}, rbcloud_np_t{wid}
+    const artworkUrl = `${host}/w/artwork/${u}.jpg`;
+
+    // cover
+    const npCover = document.getElementById("npCover");
+    const npArtLink = document.getElementById("npArtLink");
+    npCover.id = `rbcloud_np_c${widNow}`;
+    npCover.src = artworkUrl;
+    npCover.width = coverSize > 0 ? coverSize : 0;
+    npCover.height = coverSize > 0 ? coverSize : 0;
+    npArtLink.href = artworkUrl;
+
+    // artist + title
+    const npArtist = document.getElementById("npArtist");
+    const npTitle = document.getElementById("npTitle");
+    npArtist.id = `rbcloud_np_a${widNow}`;
+    npTitle.id  = `rbcloud_np_t${widNow}`;
+
+    // Recent expects: container id rbcloud_recent{widRecent} and template inside
+    const recentRoot = document.getElementById("recentRoot");
+    recentRoot.id = `rbcloud_recent${widRecent}`;
+    recentRoot.setAttribute("data-cnt", String(cnt));
+    document.getElementById("recentTitle").textContent = `Recientes (${cnt})`;
+
+    // Set cover size (even if we hide it, keep it consistent with provider)
+    const coverDiv = recentRoot.querySelector(".rbcloud_recent_track_cover");
+    if (coverDiv) coverDiv.setAttribute("data-size", String(coverSize));
+
+    // Load scripts (MUST be real <script> elements)
+    const nowUrl =
+      `${host}/w/nowplaying2.js?u=${encodeURIComponent(u)}&wid=${encodeURIComponent(widNow)}` +
+      (tf ? "&tf=1" : "");
+
+    const recentUrl =
+      `${host}/w/recent.js?u=${encodeURIComponent(u)}&wid=${encodeURIComponent(widRecent)}&v=2` +
+      (tf ? "&tf=1" : "");
+
+    injectScript(nowUrl, (msg) => {
+      errNow.style.display = "block";
+      errNow.textContent = msg;
+    });
+
+    injectScript(recentUrl, (msg) => {
+      errRecent.style.display = "block";
+      errRecent.textContent = msg;
+    });
+
+    // Optional: simple watchdog (only after some time)
+    setTimeout(() => {
+      const a = document.getElementById(`rbcloud_np_a${widNow}`);
+      const t = document.getElementById(`rbcloud_np_t${widNow}`);
+
+      const nowOk = a && t && (a.textContent || "").trim().length > 0 && (t.textContent || "").trim().length > 0 && (t.textContent || "").trim() !== "...";
+      if (!nowOk) {
+        errNow.style.display = "block";
+        errNow.textContent =
+          "RadioBOSS no pintó NowPlaying.\n" +
+          "Verifica que (host/u/widNow/tf) correspondan al mismo canal.\n" +
+          nowUrl;
+      }
+
+      // Recent: expect more than the template line to be filled
+      const titles = Array.from(document.querySelectorAll(`#rbcloud_recent${widRecent} .rbcloud_recent_title`))
+        .map(x => (x.textContent || "").trim())
+        .filter(x => x && x !== "..." );
+      if (titles.length === 0) {
+        errRecent.style.display = "block";
+        errRecent.textContent =
+          "RadioBOSS no pintó Recientes.\n" +
+          "Verifica (host/u/widRecent/tf) y que el canal tenga historial disponible.\n" +
+          recentUrl;
+      }
+    }, 9000);
   </script>
 </body>
 </html>
