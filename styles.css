@@ -1,18 +1,15 @@
 /* =========================================================
    styles.css – Monitor de Canales Musicales | Musicar
-   Home + Cliente (detalle)
-   Enfoque: monitoreo operativo 24/7
+   Compatible con: .grid, .clientCard, .btn, .clientPanel, .rb-frame
    ========================================================= */
 
 /* ---------- Reset ---------- */
-* {
-  box-sizing: border-box;
-}
+* { box-sizing: border-box; }
 
 html, body {
   margin: 0;
   padding: 0;
-  height: 100%;
+  min-height: 100%;
   background: #0f172a;
   color: #e5e7eb;
   font-family: Arial, Helvetica, sans-serif;
@@ -20,61 +17,51 @@ html, body {
 
 /* ---------- Header ---------- */
 header {
-  background: linear-gradient(
-    180deg,
-    #020617 0%,
-    #020617 65%,
-    rgba(2, 6, 23, 0.9) 100%
-  );
-  padding: 24px 16px 28px;
+  background: #020617;
+  padding: 22px 16px 26px;
   text-align: center;
   border-bottom: 1px solid rgba(255,255,255,.08);
-  position: relative;
 }
 
-/* Logo */
+/* Logo Musicar */
 .logo {
   display: block;
-  margin: 0 auto 14px;
+  margin: 0 auto 12px;
   max-width: 220px;
   width: 100%;
   height: auto;
 }
 
-/* Título principal */
+/* Título */
 header h1 {
   margin: 0;
   font-size: 20px;
-  font-weight: 800;
-  letter-spacing: 0.5px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
 }
 
 /* Subtítulo */
 header p {
-  margin: 6px 0 16px;
+  margin: 6px 0 14px;
   font-size: 13px;
   opacity: 0.75;
 }
 
-/* Botón volver (client.html) */
+/* ---------- Back link (Client page) ---------- */
 .backLink {
-  position: absolute;
-  left: 16px;
-  top: 18px;
-  font-size: 13px;
-  color: #38bdf8;
+  display: inline-block;
+  margin: 0 0 10px;
   text-decoration: none;
-  font-weight: 700;
+  color: rgba(229,231,235,.85);
+  font-size: 13px;
 }
-.backLink:hover {
-  text-decoration: underline;
-}
+.backLink:hover { color: #38bdf8; }
 
-/* ---------- Buscador (Home) ---------- */
+/* ---------- Buscador ---------- */
 header input {
-  padding: 11px 14px;
+  padding: 10px 12px;
   width: 340px;
-  max-width: 90%;
+  max-width: 92%;
   border-radius: 10px;
   border: 1px solid rgba(255,255,255,.15);
   background: #020617;
@@ -82,205 +69,147 @@ header input {
   font-size: 13px;
 }
 
-header input::placeholder {
-  color: rgba(255,255,255,.45);
-}
+header input::placeholder { color: rgba(255,255,255,.45); }
 
 header input:focus {
   outline: none;
-  border-color: #38bdf8;
+  border-color: rgba(56,189,248,.75);
 }
 
 /* ---------- Main ---------- */
-main {
-  padding: 22px;
-}
+main { padding: 20px; }
 
-/* =========================================================
-   HOME – LISTADO DE CLIENTES
-   ========================================================= */
+/* ---------- Home grid container ---------- */
+#channels { width: 100%; }
 
 /* Grid de clientes */
-#channels {
+.grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: 18px;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 14px;
 }
 
-/* Card cliente (Home) */
+/* Tarjeta del cliente */
 .clientCard {
-  background: linear-gradient(
-    180deg,
-    rgba(2,6,23,.95),
-    rgba(2,6,23,.85)
-  );
-  border-radius: 16px;
-  padding: 18px;
+  background: #020617;
   border: 1px solid rgba(255,255,255,.08);
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  min-height: 130px;
+  border-radius: 14px;
+  padding: 16px;
+  box-shadow: 0 10px 30px rgba(0,0,0,.20);
 }
 
 .clientCard h3 {
-  margin: 0 0 14px;
-  font-size: 15px;
+  margin: 0 0 12px;
+  font-size: 14px;
   font-weight: 800;
-  letter-spacing: 0.4px;
-  text-transform: uppercase;
-}
-
-/* Botón ver monitor */
-.clientCard a {
-  align-self: flex-start;
-  padding: 8px 14px;
-  border-radius: 10px;
-  background: #38bdf8;
-  color: #020617;
-  font-size: 12px;
-  font-weight: 800;
-  text-decoration: none;
   letter-spacing: .3px;
-}
-.clientCard a:hover {
-  filter: brightness(1.05);
+  line-height: 1.2;
 }
 
-/* =========================================================
-   CLIENTE – DETALLE
-   ========================================================= */
-
-.clientView {
-  max-width: 820px;
-  margin: 0 auto;
-}
-
-/* Tarjeta principal cliente */
-.clientPanel {
-  background: linear-gradient(
-    180deg,
-    rgba(2,6,23,.95),
-    rgba(2,6,23,.85)
-  );
-  border-radius: 18px;
-  padding: 20px;
-  border: 1px solid rgba(255,255,255,.08);
-}
-
-/* Nombre del cliente */
-.clientPanel h2 {
-  margin: 0 0 14px;
-  font-size: 18px;
-  font-weight: 900;
-  letter-spacing: 0.5px;
-  text-transform: uppercase;
-}
-
-/* Reproductor */
-.clientPanel audio {
+/* Botón */
+.btn {
+  display: inline-block;
   width: 100%;
-  margin-bottom: 18px;
-  filter: brightness(1.05);
+  text-align: center;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(56,189,248,.35);
+  background: rgba(56,189,248,.10);
+  color: #e5e7eb;
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 700;
+  transition: background .15s ease, border-color .15s ease, transform .05s ease;
 }
 
-/* Bloque widget */
-.widgetWrap {
-  margin-top: 10px;
-  padding-top: 10px;
+.btn:hover {
+  border-color: rgba(56,189,248,.60);
+  background: rgba(56,189,248,.16);
+}
+
+.btn:active {
+  transform: translateY(1px);
+}
+
+/* ---------- Client page panel ---------- */
+.clientPanel {
+  background: #020617;
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 14px;
+  padding: 16px;
+  max-width: 980px;
+  margin: 0 auto;
+  box-shadow: 0 10px 30px rgba(0,0,0,.20);
+}
+
+/* Audio player */
+#player,
+audio {
+  width: 100%;
+  margin-bottom: 12px;
+  border-radius: 10px;
+}
+
+/* ---------- Widget wrapper ---------- */
+.rb-frame-wrap {
+  margin-top: 12px;
+  padding-top: 12px;
   border-top: 1px solid rgba(255,255,255,.10);
 }
 
-.widgetTitle {
-  font-size: 11px;
-  font-weight: 900;
-  opacity: .75;
-  letter-spacing: .6px;
-  text-transform: uppercase;
-  margin-bottom: 8px;
-}
-
-/* Iframe RadioBOSS */
+/* Iframe del widget */
 .rb-frame {
   width: 100%;
-  height: 380px;
-  border: 0;
-  border-radius: 16px;
+  height: 420px;
+  border: none;
+  border-radius: 12px;
   background: transparent;
 }
 
-/* =========================================================
-   ESTADOS / MENSAJES
-   ========================================================= */
-
+/* ---------- Estados / Mensajes ---------- */
 .error {
   background: rgba(239,68,68,.15);
-  border: 1px solid rgba(239,68,68,.4);
-  padding: 16px;
+  border: 1px solid rgba(239,68,68,.40);
+  padding: 14px;
   border-radius: 12px;
   color: #fecaca;
   font-size: 13px;
+  line-height: 1.35;
 }
 
 .empty {
-  opacity: 0.7;
+  opacity: 0.75;
   font-size: 13px;
-  text-align: center;
-  padding: 20px;
 }
 
-/* =========================================================
-   FOOTER
-   ========================================================= */
-
+/* ---------- Footer ---------- */
 footer {
   text-align: center;
   padding: 16px;
   font-size: 12px;
-  opacity: 0.6;
+  opacity: 0.60;
   border-top: 1px solid rgba(255,255,255,.08);
   background: #020617;
 }
 
-/* =========================================================
-   SCROLLBAR (WebKit)
-   ========================================================= */
-
-::-webkit-scrollbar {
-  width: 8px;
-}
-
-::-webkit-scrollbar-track {
-  background: #020617;
-}
-
+/* ---------- Scrollbar (WebKit) ---------- */
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: #020617; }
 ::-webkit-scrollbar-thumb {
   background: rgba(255,255,255,.25);
   border-radius: 8px;
 }
+::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,.40); }
 
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(255,255,255,.4);
+/* ---------- Responsive ---------- */
+@media (max-width: 720px) {
+  main { padding: 14px; }
+  .clientPanel { padding: 14px; }
+  .rb-frame { height: 520px; }
 }
 
-/* =========================================================
-   RESPONSIVE
-   ========================================================= */
-
-@media (max-width: 520px) {
-  header h1 {
-    font-size: 18px;
-  }
-
-  main {
-    padding: 14px;
-  }
-
-  #channels {
-    grid-template-columns: 1fr;
-  }
-
-  .rb-frame {
-    height: 420px;
-  }
+@media (max-width: 480px) {
+  header h1 { font-size: 18px; }
+  .grid { grid-template-columns: 1fr; }
+  .rb-frame { height: 560px; }
 }
