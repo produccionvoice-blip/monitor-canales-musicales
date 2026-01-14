@@ -1,4 +1,3 @@
-// app.js (HOME) – Lista de clientes + buscador
 const container = document.getElementById("channels");
 const searchInput = document.getElementById("search");
 
@@ -8,14 +7,14 @@ fetch("channels.json", { cache: "no-store" })
   .then((r) => r.json())
   .then((data) => {
     channels = Array.isArray(data) ? data : [];
-    renderHome(channels);
+    render(channels);
   })
   .catch((e) => {
     console.error(e);
     container.innerHTML = `<div class="error">No se pudo cargar channels.json</div>`;
   });
 
-function renderHome(list) {
+function render(list) {
   container.innerHTML = "";
 
   if (!list.length) {
@@ -23,40 +22,36 @@ function renderHome(list) {
     return;
   }
 
-  list.forEach((ch) => {
-    const id = String(ch.id || "").trim();
-    const name = String(ch.client || "SIN NOMBRE").trim();
+  const grid = document.createElement("div");
+  grid.className = "grid";
 
+  list.forEach((ch) => {
     const card = document.createElement("div");
     card.className = "clientCard";
 
-    const safeName = escapeHtml(name);
-    const safeId = encodeURIComponent(id);
+    const name = escapeHtml(ch.client || "SIN NOMBRE");
+    const id = String(ch.id || "").trim();
 
     card.innerHTML = `
-      <h3>${safeName}</h3>
-      ${
-        id
-          ? `<a href="client/?id=${safeId}">Ver monitor</a>`
-          : `<div class="error">Falta "id" para este cliente en channels.json</div>`
-      }
+      <h3>${name}</h3>
+      <a class="btn" href="client/?id=${encodeURIComponent(id)}">Abrir monitor</a>
     `;
 
-    container.appendChild(card);
+    grid.appendChild(card);
   });
+
+  container.appendChild(grid);
 }
 
-// Buscador
 searchInput?.addEventListener("input", (e) => {
   const q = String(e.target.value || "").toLowerCase().trim();
-  if (!q) return renderHome(channels);
+  if (!q) return render(channels);
 
   const filtered = channels.filter((c) =>
     String(c.client || "").toLowerCase().includes(q) ||
     String(c.id || "").toLowerCase().includes(q)
   );
-
-  renderHome(filtered);
+  render(filtered);
 });
 
 function escapeHtml(str) {
@@ -67,3 +62,4 @@ function escapeHtml(str) {
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#039;");
 }
+
