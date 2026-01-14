@@ -7,37 +7,35 @@
 
   <style>
     :root{
-      --bg: transparent;
-      --txt: #e5e7eb;
-      --muted: rgba(229,231,235,.7);
-      --card: rgba(2,6,23,.6);
-      --border: rgba(255,255,255,.10);
-      --dangerBg: rgba(239,68,68,.12);
-      --dangerBd: rgba(239,68,68,.35);
-      --dangerTx: #fecaca;
+      --txt:#e5e7eb;
+      --muted:rgba(229,231,235,.7);
+      --card:rgba(2,6,23,.55);
+      --border:rgba(255,255,255,.10);
+      --dangerBg:rgba(239,68,68,.12);
+      --dangerBd:rgba(239,68,68,.35);
+      --dangerTx:#fecaca;
     }
-    html,body{margin:0;padding:0;background:var(--bg);color:var(--txt);font-family:Arial,Helvetica,sans-serif;}
+    html,body{margin:0;padding:0;background:transparent;color:var(--txt);font-family:Arial,Helvetica,sans-serif;}
     .wrap{padding:14px;display:flex;flex-direction:column;gap:12px;}
     .box{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:12px;}
-    .kicker{font-size:12px;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);margin:0 0 6px;}
-    .npMain{display:flex;align-items:flex-start;gap:10px;}
-    .npLeft{display:none;} /* ocultamos carátula para monitoreo */
-    .npRight{min-width:0;}
-    .npArtist{font-weight:700;font-size:14px;line-height:1.2;margin-bottom:4px;}
-    .npTitle{font-size:13px;opacity:.95;line-height:1.2;word-break:break-word;}
+    .kicker{font-size:12px;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);margin:0 0 8px;}
+    .hint{color:var(--muted);font-size:12px;margin-top:8px;}
+    .error{background:var(--dangerBg);border:1px solid var(--dangerBd);color:var(--dangerTx);padding:10px;border-radius:12px;font-size:12px;white-space:pre-wrap;}
 
-    /* Recientes: ocultamos covers, dejamos texto claro */
-    .rbcloud_recent_track_cover{display:none !important;}
+    /* ==== MONITOREO: ocultar carátulas sin romper RadioBOSS ==== */
+    .rbcloud_nowplaying a { display:none !important; }      /* oculta portada en NowPlaying */
+    .rbcloud_recent_track_cover { display:none !important; }/* oculta portada en Recientes */
+
+    /* Mejor legibilidad */
+    .rbcloud_nowplaying { align-items:flex-start !important; }
     .rbcloud_recenttracks{display:flex;flex-direction:column;gap:10px;}
     .rbcloud_recent_track{
       display:flex;align-items:flex-start;gap:10px;
       padding:8px 10px;border:1px solid rgba(255,255,255,.08);
-      border-radius:12px;background:rgba(0,0,0,.08);
+      border-radius:12px;background:rgba(0,0,0,.10);
     }
     .rbcloud_recent_artist{font-weight:700;font-size:13px;}
     .rbcloud_recent_title{font-size:12px;opacity:.95;word-break:break-word;}
-    .error{background:var(--dangerBg);border:1px solid var(--dangerBd);color:var(--dangerTx);padding:10px;border-radius:12px;font-size:12px;}
-    .hint{color:var(--muted);font-size:12px;}
   </style>
 </head>
 
@@ -45,14 +43,14 @@
   <div class="wrap">
     <div class="box">
       <p class="kicker">Ahora sonando</p>
-      <div id="nowMount" class="npMain"></div>
-      <div id="nowFallback" class="hint" style="margin-top:8px;display:none;">Cargando NowPlaying…</div>
+      <div id="nowMount"></div>
+      <div id="nowHint" class="hint" style="display:none;">Cargando NowPlaying…</div>
     </div>
 
     <div class="box">
       <p class="kicker">Recientes (10)</p>
       <div id="recentMount"></div>
-      <div id="recentFallback" class="hint" style="margin-top:8px;display:none;">Cargando Recientes…</div>
+      <div id="recentHint" class="hint" style="display:none;">Cargando Recientes…</div>
     </div>
 
     <div id="fatal" class="error" style="display:none;"></div>
@@ -64,9 +62,9 @@
 
     const nowMount = document.getElementById("nowMount");
     const recentMount = document.getElementById("recentMount");
+    const nowHint = document.getElementById("nowHint");
+    const recentHint = document.getElementById("recentHint");
     const fatal = document.getElementById("fatal");
-    const nowFallback = document.getElementById("nowFallback");
-    const recentFallback = document.getElementById("recentFallback");
 
     function showFatal(msg){
       fatal.style.display = "block";
@@ -86,13 +84,13 @@
 
     async function main(){
       if(!id){
-        showFatal("Falta ?id= en el iframe del widget.");
+        showFatal("Falta ?id= en widget.html (ej: /widget.html?id=amarilo)");
         return;
       }
 
       let channels;
       try{
-        const res = await fetch(`/channels.json?v=${Date.now()}`, { cache: "no-store" });
+        const res = await fetch(`/channels.json?v=${Date.now()}`, { cache:"no-store" });
         if(!res.ok) throw new Error("HTTP " + res.status);
         channels = await res.json();
       }catch(e){
@@ -102,72 +100,73 @@
 
       const ch = channels.find(c => c.id === id);
       if(!ch){
-        showFatal('No existe el cliente id="' + id + '" en channels.json');
+        showFatal(`No existe el cliente id="${id}" en channels.json`);
         return;
       }
 
-      // ==== NOW PLAYING (estructura + IDs EXACTOS para el wid) ====
       const widNow = ch.now?.wid;
       const nowScript = ch.now?.script;
-      const artwork = ch.now?.artwork || "";
+      const artworkNow = ch.now?.artwork || "";
 
-      if(!widNow || !nowScript){
-        showFatal("Faltan datos NOW (wid/script) en channels.json para " + ch.name);
-        return;
-      }
-
-      nowMount.innerHTML = `
-        <div class="npLeft">
-          <a target="_blank" href="${artwork}">
-            <img id="rbcloud_np_c${widNow}" src="${artwork}" width="0" height="0" alt="cover art">
-          </a>
-        </div>
-        <div class="npRight">
-          <div id="rbcloud_np_a${widNow}" class="npArtist"></div>
-          <div id="rbcloud_np_t${widNow}" class="npTitle">...</div>
-        </div>
-      `;
-      nowFallback.style.display = "block";
-
-      // ==== RECENT TRACKS (estructura + IDs EXACTOS para el wid) ====
       const widRecent = ch.recent?.wid;
       const recentScript = ch.recent?.script;
       const cnt = ch.recent?.count || 10;
 
+      if(!widNow || !nowScript){
+        showFatal("Faltan datos NOW (wid/script) para " + ch.name);
+        return;
+      }
       if(!widRecent || !recentScript){
-        showFatal("Faltan datos RECENT (wid/script) en channels.json para " + ch.name);
+        showFatal("Faltan datos RECENT (wid/script) para " + ch.name);
         return;
       }
 
-      recentMount.innerHTML = `
-        <div class="rbcloud_recenttracks" id="rbcloud_recent${widRecent}" data-cnt="${cnt}">
-          <div class="rbcloud_recent_track">
-            <div class="rbcloud_recent_track_cover" data-size="0"></div>
-            <div style="min-width:0;">
-              <div class="rbcloud_recent_artist"></div>
-              <div class="rbcloud_recent_title">...</div>
-            </div>
-          </div>
-        </div>
+      /* =========
+         NOW PLAYING: HTML EXACTO RadioBOSS
+         ========= */
+      nowMount.innerHTML = `
+<!-- RadioBOSS Cloud NowPlaying Widget (Start) -->
+<div class="rbcloud_nowplaying" style="display:flex;align-items:center;">
+  <div>
+    <a target="_blank" href="${artworkNow}">
+      <img id="rbcloud_np_c${widNow}" src="${artworkNow}" width="65" height="65" alt="cover art">
+    </a>
+  </div>
+  <div style="margin-left:5pt;">
+    <div id="rbcloud_np_a${widNow}" style="font-weight:bold"></div>
+    <div id="rbcloud_np_t${widNow}">...</div>
+  </div>
+</div>
+<!-- RadioBOSS Cloud NowPlaying Widget (End) -->
       `;
-      recentFallback.style.display = "block";
+      nowHint.style.display = "block";
 
-      // Cargamos scripts DESPUÉS de crear el HTML
-      try{
-        await addScript(nowScript);
-      }catch(e){
-        showFatal("Error cargando NowPlaying script: " + e.message);
-        return;
-      }
+      /* =========
+         RECENT TRACKS: HTML EXACTO RadioBOSS
+         ========= */
+      recentMount.innerHTML = `
+<!-- RadioBOSS Cloud Recent Tracks Widget (Start) -->
+<div class="rbcloud_recenttracks" id="rbcloud_recent${widRecent}" data-cnt="${cnt}">
+  <div class="rbcloud_recent_track" style="display:flex;align-items:center;margin-bottom:5pt;">
+    <div class="rbcloud_recent_track_cover" data-size="0"></div>
+    <div style="margin-left:5pt;">
+      <div class="rbcloud_recent_artist" style="font-weight:bold"></div>
+      <div class="rbcloud_recent_title">...</div>
+    </div>
+  </div>
+</div>
+<!-- RadioBOSS Cloud Recent Tracks Widget (End) -->
+      `;
+      recentHint.style.display = "block";
 
-      try{
-        await addScript(recentScript);
-      }catch(e){
-        showFatal("Error cargando Recent script: " + e.message);
-        return;
-      }
+      /* Cargar scripts (como los entrega RadioBOSS) */
+      try { await addScript(nowScript); }
+      catch(e){ showFatal("Error cargando NowPlaying script:\n" + e.message); return; }
 
-      // Validación post-carga (si RadioBOSS no pintó)
+      try { await addScript(recentScript); }
+      catch(e){ showFatal("Error cargando Recent script:\n" + e.message); return; }
+
+      /* Validación: si en 5s no escribió nada, avisamos */
       setTimeout(() => {
         const a = document.getElementById("rbcloud_np_a" + widNow);
         const t = document.getElementById("rbcloud_np_t" + widNow);
@@ -175,17 +174,19 @@
         const artist = (a?.textContent || "").trim();
         const title = (t?.textContent || "").trim();
 
-        // Si sigue vacío o en "..." luego de unos segundos, avisamos
         if(!artist && (!title || title === "...")){
           showFatal(
-            "RadioBOSS no pintó NowPlaying. " +
-            "Esto normalmente pasa si el canal no está publicando metadatos o si el wid/script no pertenecen a ese canal."
+            "RadioBOSS no escribió datos en el DOM.\n" +
+            "Si el stream suena pero aquí no aparece nada, entonces el canal no está enviando metadatos (Artist/Title) o RadioBOSS no tiene historial activo para ese wid.\n\n" +
+            "Canal: " + ch.name + "\n" +
+            "Now script: " + nowScript + "\n" +
+            "Recent script: " + recentScript
           );
         } else {
-          nowFallback.style.display = "none";
-          recentFallback.style.display = "none";
+          nowHint.style.display = "none";
+          recentHint.style.display = "none";
         }
-      }, 4500);
+      }, 5000);
     }
 
     main();
