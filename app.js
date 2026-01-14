@@ -1,72 +1,45 @@
-// app.js (HOME)
-const grid = document.getElementById("grid");
-const search = document.getElementById("search");
+// app.js — Home (lista de clientes)
+(async function () {
+  const grid = document.getElementById("channels");
+  const search = document.getElementById("search");
 
-let CHANNELS = [];
-
-function norm(s) {
-  return (s || "")
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .trim();
-}
-
-function render(list) {
   if (!grid) return;
 
-  grid.innerHTML = "";
-
-  if (!list.length) {
-    grid.innerHTML = `<div class="empty">No hay resultados.</div>`;
-    return;
-  }
-
-  for (const ch of list) {
-    const name = ch.name || ch.client || "SIN NOMBRE";
-    const id = ch.id || "";
-
-    const card = document.createElement("div");
-    card.className = "clientCard";
-
-    card.innerHTML = `
-      <div class="clientTitle">${name}</div>
-      <div class="clientMeta">ID: ${id || "-"}</div>
-      <a class="btn" href="/client/?id=${encodeURIComponent(id)}">Abrir monitor</a>
-    `;
-
-    grid.appendChild(card);
-  }
-}
-
-async function load() {
-  // Si el contenedor no existe, mostramos error visible (evita “pantalla vacía”)
-  if (!grid) {
-    console.error('No existe el contenedor #grid en index.html');
-    return;
-  }
-
+  let channels = [];
   try {
-    const res = await fetch(`/channels.json?v=${Date.now()}`, { cache: "no-store" });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    CHANNELS = await res.json();
-
-    render(CHANNELS);
+    const res = await fetch("./channels.json?v=" + Date.now(), { cache: "no-store" });
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    channels = await res.json();
   } catch (e) {
-    grid.innerHTML = `<div class="error">Error cargando channels.json: ${e.message}</div>`;
+    grid.innerHTML = `<div class="error">No se pudo cargar channels.json: ${e.message}</div>`;
+    return;
   }
-}
 
-search?.addEventListener("input", () => {
-  const q = norm(search.value);
-  if (!q) return render(CHANNELS);
+  function render(list) {
+    if (!list.length) {
+      grid.innerHTML = `<div class="empty">No hay clientes para mostrar.</div>`;
+      return;
+    }
 
-  render(
-    CHANNELS.filter((c) => {
-      const name = c.name || c.client || "";
-      return norm(name).includes(q) || norm(c.id).includes(q);
-    })
-  );
-});
+    grid.innerHTML = list
+      .map((c) => {
+        return `
+          <div class="clientCard">
+            <h3>${c.name}</h3>
+            <a class="btn" href="./client/index.html?id=${encodeURIComponent(c.id)}">Abrir monitor</a>
+          </div>
+        `;
+      })
+      .join("");
+  }
 
-load();
+  render(channels);
+
+  if (search) {
+    search.addEventListener("input", () => {
+      const q = (search.value || "").trim().toLowerCase();
+      const filtered = channels.filter((c) => c.name.toLowerCase().includes(q) || c.id.toLowerCase().includes(q));
+      render(filtered);
+    });
+  }
+})();
