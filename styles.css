@@ -1,29 +1,29 @@
 /* =========================================================
    styles.css – Monitor de Canales Musicales | Musicar
-   Compatible con: .grid, .clientCard, .btn, .clientPanel, .rb-frame
+   Compatible: .grid .clientCard .btn .clientPanel .rb-frame
    ========================================================= */
 
-/* ---------- Reset ---------- */
 * { box-sizing: border-box; }
 
 html, body {
   margin: 0;
   padding: 0;
-  min-height: 100%;
-  background: #0f172a;
+  height: 100%;
+  background: radial-gradient(1200px 700px at 50% -20%, #0b1b3a 0%, #0b1026 45%, #070a17 100%);
   color: #e5e7eb;
   font-family: Arial, Helvetica, sans-serif;
 }
 
-/* ---------- Header ---------- */
+a { color: inherit; text-decoration: none; }
+
 header {
-  background: #020617;
+  background: rgba(2, 6, 23, 0.75);
   padding: 22px 16px 26px;
   text-align: center;
   border-bottom: 1px solid rgba(255,255,255,.08);
+  backdrop-filter: blur(8px);
 }
 
-/* Logo Musicar */
 .logo {
   display: block;
   margin: 0 auto 12px;
@@ -32,184 +32,193 @@ header {
   height: auto;
 }
 
-/* Título */
 header h1 {
   margin: 0;
-  font-size: 20px;
-  font-weight: 700;
+  font-size: 22px;
+  font-weight: 800;
   letter-spacing: 0.4px;
 }
 
-/* Subtítulo */
 header p {
   margin: 6px 0 14px;
   font-size: 13px;
   opacity: 0.75;
 }
 
-/* ---------- Back link (Client page) ---------- */
-.backLink {
-  display: inline-block;
-  margin: 0 0 10px;
-  text-decoration: none;
-  color: rgba(229,231,235,.85);
-  font-size: 13px;
-}
-.backLink:hover { color: #38bdf8; }
-
-/* ---------- Buscador ---------- */
 header input {
   padding: 10px 12px;
-  width: 340px;
-  max-width: 92%;
+  width: 320px;
+  max-width: 90%;
   border-radius: 10px;
   border: 1px solid rgba(255,255,255,.15);
-  background: #020617;
+  background: rgba(2,6,23,.65);
   color: #e5e7eb;
   font-size: 13px;
 }
 
 header input::placeholder { color: rgba(255,255,255,.45); }
+header input:focus { outline: none; border-color: #38bdf8; }
 
-header input:focus {
-  outline: none;
-  border-color: rgba(56,189,248,.75);
-}
-
-/* ---------- Main ---------- */
 main { padding: 20px; }
 
-/* ---------- Home grid container ---------- */
-#channels { width: 100%; }
-
-/* Grid de clientes */
+/* HOME grid */
 .grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: 14px;
+  gap: 16px;
+  align-items: start;
 }
 
-/* Tarjeta del cliente */
 .clientCard {
-  background: #020617;
+  background: rgba(2, 6, 23, 0.78);
   border: 1px solid rgba(255,255,255,.08);
-  border-radius: 14px;
+  border-radius: 16px;
   padding: 16px;
-  box-shadow: 0 10px 30px rgba(0,0,0,.20);
+  box-shadow: 0 10px 40px rgba(0,0,0,.35);
 }
 
-.clientCard h3 {
-  margin: 0 0 12px;
-  font-size: 14px;
+.clientTitle {
+  font-size: 15px;
   font-weight: 800;
   letter-spacing: .3px;
-  line-height: 1.2;
+  margin-bottom: 6px;
 }
 
-/* Botón */
+.clientMeta {
+  font-size: 12px;
+  opacity: .7;
+  margin-bottom: 12px;
+}
+
 .btn {
-  display: inline-block;
-  width: 100%;
-  text-align: center;
-  padding: 10px 12px;
-  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 40px;
+  padding: 0 14px;
+  border-radius: 12px;
   border: 1px solid rgba(56,189,248,.35);
-  background: rgba(56,189,248,.10);
-  color: #e5e7eb;
-  text-decoration: none;
-  font-size: 13px;
+  background: rgba(2, 40, 70, .35);
+  color: #eaf6ff;
   font-weight: 700;
-  transition: background .15s ease, border-color .15s ease, transform .05s ease;
+  font-size: 13px;
+  transition: transform .08s ease, background .15s ease, border-color .15s ease;
 }
 
 .btn:hover {
-  border-color: rgba(56,189,248,.60);
-  background: rgba(56,189,248,.16);
+  transform: translateY(-1px);
+  background: rgba(2, 60, 105, .45);
+  border-color: rgba(56,189,248,.65);
 }
 
-.btn:active {
-  transform: translateY(1px);
-}
-
-/* ---------- Client page panel ---------- */
+/* Client page panel */
 .clientPanel {
-  background: #020617;
-  border: 1px solid rgba(255,255,255,.08);
-  border-radius: 14px;
-  padding: 16px;
-  max-width: 980px;
+  width: min(980px, 92vw);
   margin: 0 auto;
-  box-shadow: 0 10px 30px rgba(0,0,0,.20);
+  background: rgba(2, 6, 23, 0.78);
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 18px;
+  padding: 18px;
+  box-shadow: 0 10px 40px rgba(0,0,0,.35);
 }
 
-/* Audio player */
-#player,
-audio {
-  width: 100%;
-  margin-bottom: 12px;
-  border-radius: 10px;
+.backLink {
+  position: absolute;
+  left: 18px;
+  top: 18px;
+  font-size: 13px;
+  opacity: .85;
 }
 
-/* ---------- Widget wrapper ---------- */
-.rb-frame-wrap {
-  margin-top: 12px;
-  padding-top: 12px;
-  border-top: 1px solid rgba(255,255,255,.10);
-}
+.audioWrap { margin: 12px 0 14px; }
+audio { width: 100%; }
 
-/* Iframe del widget */
+/* iframe */
 .rb-frame {
   width: 100%;
-  height: 420px;
+  height: 360px;
   border: none;
-  border-radius: 12px;
+  border-radius: 14px;
   background: transparent;
 }
 
-/* ---------- Estados / Mensajes ---------- */
+/* widget.html look */
+.widgetBody { background: transparent; }
+.widgetWrap { padding: 0; }
+
+.section {
+  padding: 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,.08);
+  background: rgba(2, 6, 23, 0.65);
+  margin-bottom: 12px;
+}
+
+.sectionTitle {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: .9px;
+  opacity: .75;
+  margin-bottom: 10px;
+}
+
+.npArtist {
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.npTitle {
+  font-size: 16px;
+  margin-top: 4px;
+}
+
+.npHint {
+  font-size: 12px;
+  opacity: .65;
+  margin-top: 6px;
+}
+
+/* recent list */
+.recentList { margin-top: 6px; }
+.recentItem {
+  padding: 10px 10px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,.06);
+  background: rgba(15, 23, 42, .35);
+}
+.recentArtist { font-size: 13px; }
+.recentTitle { font-size: 13px; opacity: .9; margin-top: 2px; }
+
+/* status blocks */
 .error {
   background: rgba(239,68,68,.15);
-  border: 1px solid rgba(239,68,68,.40);
+  border: 1px solid rgba(239,68,68,.4);
   padding: 14px;
   border-radius: 12px;
   color: #fecaca;
   font-size: 13px;
-  line-height: 1.35;
 }
 
-.empty {
-  opacity: 0.75;
-  font-size: 13px;
-}
+.empty { opacity: 0.7; font-size: 13px; }
 
-/* ---------- Footer ---------- */
 footer {
   text-align: center;
   padding: 16px;
   font-size: 12px;
-  opacity: 0.60;
+  opacity: 0.6;
   border-top: 1px solid rgba(255,255,255,.08);
-  background: #020617;
+  background: rgba(2, 6, 23, 0.75);
+  backdrop-filter: blur(8px);
 }
 
-/* ---------- Scrollbar (WebKit) ---------- */
+/* scrollbar */
 ::-webkit-scrollbar { width: 8px; }
-::-webkit-scrollbar-track { background: #020617; }
-::-webkit-scrollbar-thumb {
-  background: rgba(255,255,255,.25);
-  border-radius: 8px;
-}
-::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,.40); }
+::-webkit-scrollbar-track { background: rgba(2,6,23,.75); }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,.25); border-radius: 8px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,.4); }
 
-/* ---------- Responsive ---------- */
-@media (max-width: 720px) {
-  main { padding: 14px; }
-  .clientPanel { padding: 14px; }
-  .rb-frame { height: 520px; }
-}
-
-@media (max-width: 480px) {
+@media (max-width: 520px) {
   header h1 { font-size: 18px; }
-  .grid { grid-template-columns: 1fr; }
-  .rb-frame { height: 560px; }
+  main { padding: 14px; }
+  .rb-frame { height: 420px; }
 }
