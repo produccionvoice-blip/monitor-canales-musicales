@@ -1,27 +1,27 @@
 /* =========================================================
    styles.css – Monitor de Canales Musicales | Musicar
-   Compatible: .grid .clientCard .btn .clientPanel .rb-frame
+   (Solo reproductor, sin NowPlaying/Recientes)
    ========================================================= */
 
+/* ---------- Reset ---------- */
 * { box-sizing: border-box; }
 
 html, body {
   margin: 0;
   padding: 0;
   height: 100%;
-  background: radial-gradient(1200px 700px at 50% -20%, #0b1b3a 0%, #0b1026 45%, #070a17 100%);
+  background: #0f172a;
   color: #e5e7eb;
   font-family: Arial, Helvetica, sans-serif;
 }
 
-a { color: inherit; text-decoration: none; }
-
+/* ---------- Header ---------- */
 header {
-  background: rgba(2, 6, 23, 0.75);
+  background: #020617;
   padding: 22px 16px 26px;
   text-align: center;
   border-bottom: 1px solid rgba(255,255,255,.08);
-  backdrop-filter: blur(8px);
+  position: relative;
 }
 
 .logo {
@@ -34,8 +34,8 @@ header {
 
 header h1 {
   margin: 0;
-  font-size: 22px;
-  font-weight: 800;
+  font-size: 20px;
+  font-weight: 700;
   letter-spacing: 0.4px;
 }
 
@@ -45,13 +45,26 @@ header p {
   opacity: 0.75;
 }
 
+/* Back link (client) */
+.backLink {
+  position: absolute;
+  left: 16px;
+  top: 14px;
+  color: #93c5fd;
+  text-decoration: none;
+  font-size: 13px;
+  opacity: 0.9;
+}
+.backLink:hover { opacity: 1; text-decoration: underline; }
+
+/* ---------- Buscador ---------- */
 header input {
   padding: 10px 12px;
   width: 320px;
   max-width: 90%;
-  border-radius: 10px;
+  border-radius: 8px;
   border: 1px solid rgba(255,255,255,.15);
-  background: rgba(2,6,23,.65);
+  background: #020617;
   color: #e5e7eb;
   font-size: 13px;
 }
@@ -59,166 +72,129 @@ header input {
 header input::placeholder { color: rgba(255,255,255,.45); }
 header input:focus { outline: none; border-color: #38bdf8; }
 
+/* ---------- Main ---------- */
 main { padding: 20px; }
 
-/* HOME grid */
-.grid {
+/* ---------- Grid (home) ---------- */
+.grid, #channels {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
   gap: 16px;
-  align-items: start;
 }
 
+/* ---------- Card (home) ---------- */
 .clientCard {
-  background: rgba(2, 6, 23, 0.78);
-  border: 1px solid rgba(255,255,255,.08);
-  border-radius: 16px;
+  background: #020617;
+  border-radius: 14px;
   padding: 16px;
-  box-shadow: 0 10px 40px rgba(0,0,0,.35);
+  border: 1px solid rgba(255,255,255,.08);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
-.clientTitle {
-  font-size: 15px;
-  font-weight: 800;
-  letter-spacing: .3px;
-  margin-bottom: 6px;
+.clientCard h3 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
 }
 
-.clientMeta {
-  font-size: 12px;
-  opacity: .7;
-  margin-bottom: 12px;
-}
-
+/* ---------- Button ---------- */
 .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  height: 40px;
-  padding: 0 14px;
-  border-radius: 12px;
+  padding: 10px 12px;
+  border-radius: 10px;
   border: 1px solid rgba(56,189,248,.35);
-  background: rgba(2, 40, 70, .35);
-  color: #eaf6ff;
-  font-weight: 700;
+  background: rgba(56,189,248,.10);
+  color: #e5e7eb;
+  text-decoration: none;
   font-size: 13px;
-  transition: transform .08s ease, background .15s ease, border-color .15s ease;
+  font-weight: 700;
+  letter-spacing: .2px;
 }
-
 .btn:hover {
-  transform: translateY(-1px);
-  background: rgba(2, 60, 105, .45);
-  border-color: rgba(56,189,248,.65);
+  background: rgba(56,189,248,.16);
+  border-color: rgba(56,189,248,.55);
 }
 
-/* Client page panel */
+/* ---------- Client panel ---------- */
 .clientPanel {
-  width: min(980px, 92vw);
+  max-width: 900px;
   margin: 0 auto;
-  background: rgba(2, 6, 23, 0.78);
-  border: 1px solid rgba(255,255,255,.08);
+  background: #020617;
   border-radius: 18px;
   padding: 18px;
-  box-shadow: 0 10px 40px rgba(0,0,0,.35);
-}
-
-.backLink {
-  position: absolute;
-  left: 18px;
-  top: 18px;
-  font-size: 13px;
-  opacity: .85;
-}
-
-.audioWrap { margin: 12px 0 14px; }
-audio { width: 100%; }
-
-/* iframe */
-.rb-frame {
-  width: 100%;
-  height: 360px;
-  border: none;
-  border-radius: 14px;
-  background: transparent;
-}
-
-/* widget.html look */
-.widgetBody { background: transparent; }
-.widgetWrap { padding: 0; }
-
-.section {
-  padding: 14px;
-  border-radius: 14px;
   border: 1px solid rgba(255,255,255,.08);
-  background: rgba(2, 6, 23, 0.65);
+}
+
+.clientHeaderRow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
   margin-bottom: 12px;
 }
 
-.sectionTitle {
-  font-size: 12px;
-  font-weight: 800;
-  letter-spacing: .9px;
-  opacity: .75;
-  margin-bottom: 10px;
-}
-
-.npArtist {
-  font-size: 14px;
-  font-weight: 800;
-}
-
-.npTitle {
+.clientPanel h2 {
+  margin: 0;
   font-size: 16px;
-  margin-top: 4px;
+  font-weight: 800;
+  letter-spacing: .3px;
 }
 
-.npHint {
-  font-size: 12px;
-  opacity: .65;
+/* Audio */
+.clientPanel audio {
+  width: 100%;
   margin-top: 6px;
 }
 
-/* recent list */
-.recentList { margin-top: 6px; }
-.recentItem {
-  padding: 10px 10px;
-  border-radius: 12px;
-  border: 1px solid rgba(255,255,255,.06);
-  background: rgba(15, 23, 42, .35);
+/* Hints / empty / error */
+.hint {
+  opacity: 0.75;
+  font-size: 13px;
 }
-.recentArtist { font-size: 13px; }
-.recentTitle { font-size: 13px; opacity: .9; margin-top: 2px; }
 
-/* status blocks */
+.empty {
+  opacity: 0.7;
+  font-size: 13px;
+  padding: 14px;
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 12px;
+}
+
 .error {
   background: rgba(239,68,68,.15);
   border: 1px solid rgba(239,68,68,.4);
   padding: 14px;
-  border-radius: 12px;
+  border-radius: 10px;
   color: #fecaca;
   font-size: 13px;
 }
 
-.empty { opacity: 0.7; font-size: 13px; }
-
+/* ---------- Footer ---------- */
 footer {
   text-align: center;
   padding: 16px;
   font-size: 12px;
   opacity: 0.6;
   border-top: 1px solid rgba(255,255,255,.08);
-  background: rgba(2, 6, 23, 0.75);
-  backdrop-filter: blur(8px);
+  background: #020617;
 }
 
-/* scrollbar */
+/* ---------- Scrollbar (WebKit) ---------- */
 ::-webkit-scrollbar { width: 8px; }
-::-webkit-scrollbar-track { background: rgba(2,6,23,.75); }
+::-webkit-scrollbar-track { background: #020617; }
 ::-webkit-scrollbar-thumb { background: rgba(255,255,255,.25); border-radius: 8px; }
 ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,.4); }
 
-@media (max-width: 520px) {
+/* ---------- Responsive ---------- */
+@media (max-width: 480px) {
   header h1 { font-size: 18px; }
   main { padding: 14px; }
-  .rb-frame { height: 420px; }
+  .grid, #channels { grid-template-columns: 1fr; }
+  .backLink { top: 10px; }
 }
