@@ -13,6 +13,8 @@ function norm(s) {
 }
 
 function render(list) {
+  if (!grid) return;
+
   grid.innerHTML = "";
 
   if (!list.length) {
@@ -26,7 +28,6 @@ function render(list) {
 
     const card = document.createElement("div");
     card.className = "clientCard";
-    card.dataset.name = name;
 
     card.innerHTML = `
       <div class="clientTitle">${name}</div>
@@ -39,10 +40,17 @@ function render(list) {
 }
 
 async function load() {
+  // Si el contenedor no existe, mostramos error visible (evita “pantalla vacía”)
+  if (!grid) {
+    console.error('No existe el contenedor #grid en index.html');
+    return;
+  }
+
   try {
     const res = await fetch(`/channels.json?v=${Date.now()}`, { cache: "no-store" });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     CHANNELS = await res.json();
+
     render(CHANNELS);
   } catch (e) {
     grid.innerHTML = `<div class="error">Error cargando channels.json: ${e.message}</div>`;
@@ -52,7 +60,13 @@ async function load() {
 search?.addEventListener("input", () => {
   const q = norm(search.value);
   if (!q) return render(CHANNELS);
-  render(CHANNELS.filter((c) => norm(c.name || c.client).includes(q) || norm(c.id).includes(q)));
+
+  render(
+    CHANNELS.filter((c) => {
+      const name = c.name || c.client || "";
+      return norm(name).includes(q) || norm(c.id).includes(q);
+    })
+  );
 });
 
 load();
