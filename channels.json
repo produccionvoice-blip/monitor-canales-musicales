@@ -8,9 +8,7 @@
       "u": 216,
       "widNow": 7129,
       "widRecent": 8064,
-      "tf": 1,
-      "recentCount": 10,
-      "coverSize": 65
+      "tf": 1
     }
   },
   {
@@ -21,10 +19,7 @@
       "host": "https://c9.radioboss.fm",
       "u": 87,
       "widNow": 12074,
-      "widRecent": 5636,
-      "tf": 0,
-      "recentCount": 10,
-      "coverSize": 0
+      "widRecent": 5636
     }
   },
   {
@@ -35,10 +30,7 @@
       "host": "https://c9.radioboss.fm",
       "u": 90,
       "widNow": 2860,
-      "widRecent": 7931,
-      "tf": 0,
-      "recentCount": 10,
-      "coverSize": 0
+      "widRecent": 7931
     }
   }
 ]
