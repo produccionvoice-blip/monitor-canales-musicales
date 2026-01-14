@@ -1,105 +1,47 @@
-// client.js – Detalle por cliente (URL: /client/?id=xxxx)
-const view = document.getElementById("clientView");
-const titleEl = document.getElementById("clientTitle");
-const subtitleEl = document.getElementById("clientSubtitle");
+(function () {
+  const $ = (sel) => document.querySelector(sel);
+  const params = new URLSearchParams(location.search);
+  const id = (params.get("id") || "").trim();
 
-const params = new URLSearchParams(location.search);
-const id = (params.get("id") || "").trim();
+  async function load() {
+    if (!id) {
+      $("#clientName").textContent = "Falta ?id=";
+      $("#clientMeta").textContent = "Ejemplo: /client/?id=pepe-ganga";
+      return;
+    }
 
-if (!id) {
-  renderError(`Falta el parámetro "id" en la URL. Ejemplo: /client/?id=pepe-ganga`);
-} else {
-  loadClient(id);
-}
+    const res = await fetch("../channels.json", { cache: "no-store" });
+    if (!res.ok) throw new Error("No se pudo cargar channels.json");
 
-function loadClient(clientId) {
-  fetch("../channels.json", { cache: "no-store" })
-    .then((r) => r.json())
-    .then((list) => {
-      const channels = Array.isArray(list) ? list : [];
-      const client = channels.find(
-        (c) => String(c.id || "").toLowerCase() === clientId.toLowerCase()
-      );
+    const list = await res.json();
+    const ch = (Array.isArray(list) ? list : []).find((x) => String(x.id || "") === id);
 
-      if (!client) {
-        renderError(`No se encontró el cliente con id: "${escapeHtml(clientId)}"`);
-        return;
-      }
+    if (!ch) {
+      $("#clientName").textContent = "Cliente no encontrado";
+      $("#clientMeta").textContent = "ID: " + id;
+      return;
+    }
 
-      renderClient(client);
-    })
-    .catch((e) => {
-      console.error(e);
-      renderError("No se pudo cargar channels.json");
-    });
-}
+    document.title = `Monitor: ${ch.client} | Musicar`;
+    $("#pageTitle").textContent = `Monitor: ${ch.client}`;
+    $("#clientName").textContent = ch.client;
+    $("#clientMeta").textContent = `Voice Experience - Musicar | ID: ${ch.id}`;
 
-function renderClient(client) {
-  const name = String(client.client || "SIN NOMBRE").trim();
-  const url = String(client.url || "").trim();
-  const rb = client.rb || null;
+    const audio = $("#player");
+    if (audio) audio.src = ch.streamUrl || "";
 
-  if (titleEl) titleEl.textContent = `Monitor: ${name}`;
-  if (subtitleEl) subtitleEl.textContent = `Voice Experience - Musicar | ID: ${client.id}`;
-
-  let iframeSrc = "";
-  if (rb && rb.host && rb.u && rb.widNow && rb.widRecent) {
-    const q = new URLSearchParams({
-      host: rb.host,
-      u: String(rb.u),
-      widNow: String(rb.widNow),
-      widRecent: String(rb.widRecent)
-    });
-    if (rb.tf) q.set("tf", String(rb.tf));
-
-    // Estamos en /client/ => widget está en raíz
-    iframeSrc = `../widget.html?${q.toString()}`;
+    const iframe = $("#rbFrame");
+    if (iframe) {
+      // cb=1 fuerza recarga de scripts si el navegador cachea demasiado
+      iframe.src = `../widget.html?id=${encodeURIComponent(ch.id)}&cb=1`;
+    }
   }
 
-  view.innerHTML = `
-    <div class="clientPanel">
-      <h2>${escapeHtml(name)}</h2>
-
-      ${
-        url
-          ? `
-        <audio controls preload="none" crossorigin="anonymous">
-          <source src="${escapeAttr(url)}" type="audio/mpeg">
-          Tu navegador no soporta audio HTML5.
-        </audio>
-        `
-          : `<div class="error">Este cliente no tiene URL de stream configurada.</div>`
-      }
-
-      <div class="widgetWrap">
-        <div class="widgetTitle">Ahora sonando y recientes</div>
-
-        ${
-          iframeSrc
-            ? `<iframe class="rb-frame" src="${iframeSrc}" loading="lazy"></iframe>`
-            : `<div class="error">Falta configuración rb (host/u/widNow/widRecent) en channels.json</div>`
-        }
-      </div>
-    </div>
-  `;
-}
-
-function renderError(msg) {
-  if (titleEl) titleEl.textContent = "Monitor: Cliente no disponible";
-  if (subtitleEl) subtitleEl.textContent = "Voice Experience - Musicar";
-
-  view.innerHTML = `<div class="error">${msg}</div>`;
-}
-
-function escapeHtml(str) {
-  return String(str ?? "")
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
-}
-
-function escapeAttr(str) {
-  return escapeHtml(str);
-}
+  window.addEventListener("DOMContentLoaded", () => {
+    load().catch((e) => {
+      console.error(e);
+      $("#clientName").textContent = "Error cargando monitor";
+      $("#clientMeta").textContent = e.message || String(e);
+    });
+  });
+})();
