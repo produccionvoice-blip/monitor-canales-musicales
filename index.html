@@ -8,8 +8,9 @@
     <meta name="color-scheme" content="light dark" />
     <meta name="theme-color" content="#0b1220" />
 
-    <!-- CSP razonable para este caso (requiere scripts externos de RadioBOSS).
-         Si en tu entorno agregas headers CSP desde Cloudflare, asegúrate de permitir los mismos orígenes. -->
+    <!-- CSP ajustada:
+         - media-src: permite orígenes con puerto (streams)
+         - connect-src: permite llamadas XHR/fetch de los widgets RadioBOSS -->
     <meta
       http-equiv="Content-Security-Policy"
       content="
@@ -19,19 +20,23 @@
         frame-ancestors 'none';
         upgrade-insecure-requests;
         img-src 'self' data: https://c38.radioboss.fm https://c9.radioboss.fm https://c11.radioboss.fm;
-        media-src https://c38.radioboss.fm https://c9.radioboss.fm https://c11.radioboss.fm;
+        media-src https://c38.radioboss.fm:8216 https://c9.radioboss.fm:8087 https://c9.radioboss.fm:8090 https://c11.radioboss.fm:8282;
         script-src 'self' 'unsafe-inline' https://c38.radioboss.fm https://c9.radioboss.fm https://c11.radioboss.fm;
         style-src 'self' 'unsafe-inline';
-        connect-src 'self';
+        connect-src 'self' https://c38.radioboss.fm https://c9.radioboss.fm https://c11.radioboss.fm;
       "
     />
 
     <link rel="stylesheet" href="./styles.css" />
 
-    <!-- Preconnect para mejorar tiempos con RadioBOSS -->
+    <!-- Preconnect -->
     <link rel="preconnect" href="https://c38.radioboss.fm" crossorigin />
     <link rel="preconnect" href="https://c9.radioboss.fm" crossorigin />
     <link rel="preconnect" href="https://c11.radioboss.fm" crossorigin />
+    <link rel="preconnect" href="https://c38.radioboss.fm:8216" crossorigin />
+    <link rel="preconnect" href="https://c9.radioboss.fm:8087" crossorigin />
+    <link rel="preconnect" href="https://c9.radioboss.fm:8090" crossorigin />
+    <link rel="preconnect" href="https://c11.radioboss.fm:8282" crossorigin />
 
     <title>Monitoreo Streaming | Musicar S.A.S.</title>
   </head>
@@ -41,15 +46,15 @@
 
     <header class="topbar">
       <div class="container topbar__inner">
-        <div class="brand">
-          <img class="brand__logo" src="./Logo_Musicar.png" alt="Musicar S.A.S." />
-          <div class="brand__text">
+        <div class="brand brand--center">
+          <img class="brand__logo brand__logo--lg" src="./Logo_Musicar.png" alt="Musicar S.A.S." />
+          <div class="brand__text brand__text--center">
             <div class="brand__title">Monitoreo de Canales</div>
-            <div class="brand__subtitle">Streaming • RadioBOSS.fm • Musicar S.A.S.</div>
+            <div class="brand__subtitle">Musicar – Conecta los Sentidos</div>
           </div>
         </div>
 
-        <div class="topbar__meta" id="topMeta" aria-live="polite"></div>
+        <div class="topbar__meta topbar__meta--center" id="topMeta" aria-live="polite"></div>
       </div>
     </header>
 
@@ -59,7 +64,7 @@
         <div class="panel__header">
           <h1 class="h1">Canales</h1>
           <p class="muted">
-            Busca por nombre del canal y selecciona uno para ver: reproductor, Now Playing y Recent Tracks.
+            Busca por nombre del canal y selecciona uno para ver el reproductor, la reproducción actual y lo que ha sonado.
           </p>
         </div>
 
@@ -84,13 +89,6 @@
         </div>
 
         <div id="channelsGrid" class="grid" aria-live="polite"></div>
-
-        <div class="panel__footer">
-          <div class="note">
-            <strong>Nota:</strong> “Now Playing” y “Recent Tracks” dependen de metadatos publicados por cada canal.
-            Si no aparecen, usualmente es porque el canal no está publicando metadatos o el widget no corresponde al canal.
-          </div>
-        </div>
       </section>
 
       <!-- Vista Canal -->
@@ -105,7 +103,6 @@
           <section class="card">
             <div class="card__header">
               <h2 class="h2">Reproductor</h2>
-              <p class="muted" id="streamUrlLabel"></p>
             </div>
 
             <div class="player">
@@ -113,30 +110,20 @@
                 Tu navegador no soporta reproducción de audio HTML5.
               </audio>
 
-              <div class="player__actions">
-                <a id="openStreamLink" class="btn btn--primary" href="#" target="_blank" rel="noopener noreferrer">
-                  Abrir stream
-                </a>
-
-                <button id="btnStop" class="btn btn--danger" type="button" title="Detener reproducción">
-                  Detener
-                </button>
-              </div>
-
               <div class="player__hint muted">
-                Consejo: si el audio no inicia, verifica conectividad, permisos del navegador y que el stream esté activo.
+                Si el audio no inicia, valida que el stream esté activo y que la red permita la salida por el puerto correspondiente.
               </div>
             </div>
           </section>
 
           <section class="card">
             <div class="card__header">
-              <h2 class="h2">Now Playing</h2>
-              <p class="muted">Información en tiempo real proporcionada por RadioBOSS.</p>
+              <h2 class="h2">Reproducción Actual</h2>
             </div>
 
             <div id="nowPlayingMount" class="rbMount" aria-live="polite"></div>
 
+            <!-- Mantengo estos contenedores pero solo se muestran si realmente hay falla sostenida -->
             <div class="card__footer">
               <div id="npStatus" class="status" hidden></div>
             </div>
@@ -144,8 +131,7 @@
 
           <section class="card card--full">
             <div class="card__header">
-              <h2 class="h2">Recent Tracks</h2>
-              <p class="muted">Últimas canciones reproducidas (según RadioBOSS).</p>
+              <h2 class="h2">Lo que ha sonado</h2>
             </div>
 
             <div id="recentTracksMount" class="rbMount" aria-live="polite"></div>
@@ -171,9 +157,7 @@
 
     <footer class="footer">
       <div class="container footer__inner">
-        <div class="muted">
-          Musicar S.A.S. • Monitoreo de Streaming • <span id="year"></span>
-        </div>
+        <div class="muted">Musicar S.A.S. • Monitoreo de Streaming • <span id="year"></span></div>
       </div>
     </footer>
 
@@ -196,11 +180,8 @@
         const btnRetry = el("btnRetry");
 
         const btnBack = el("btnBack");
-        const btnStop = el("btnStop");
 
         const channelTitle = el("channelTitle");
-        const streamUrlLabel = el("streamUrlLabel");
-        const openStreamLink = el("openStreamLink");
         const audioPlayer = el("audioPlayer");
 
         const nowPlayingMount = el("nowPlayingMount");
@@ -216,7 +197,7 @@
           channels: [],
           streams: [],
           merged: [],
-          loadedAt: null,
+          loadedAt: null
         };
 
         function normalizeText(s) {
@@ -240,8 +221,7 @@
 
         function parseQuery() {
           const qs = new URLSearchParams(window.location.search);
-          const c = qs.get("c") || qs.get("channel") || "";
-          return c;
+          return qs.get("c") || qs.get("channel") || "";
         }
 
         function setQueryChannel(nameOrEmpty) {
@@ -272,18 +252,17 @@
             const channels = Array.isArray(widgets.channels) ? widgets.channels : [];
             const streamList = Array.isArray(streams.streams) ? streams.streams : [];
 
-            // Merge por nombre exacto
             const mapStream = new Map(streamList.map((s) => [s.name, s.streamUrl]));
             const merged = channels.map((ch) => ({
               ...ch,
-              streamUrl: mapStream.get(ch.name) || "",
+              streamUrl: mapStream.get(ch.name) || ""
             }));
 
             state = {
               channels,
               streams: streamList,
               merged,
-              loadedAt: new Date(),
+              loadedAt: new Date()
             };
 
             setTopMeta(`Configuración cargada • ${state.merged.length} canales`);
@@ -359,7 +338,7 @@
         function injectRadioBossWidget(mount, embedHtml) {
           mount.innerHTML = embedHtml || "";
 
-          // Los scripts insertados por innerHTML no ejecutan automáticamente: se reemplazan por scripts reales.
+          // Ejecutar scripts externos (innerHTML no ejecuta <script>)
           const scripts = Array.from(mount.querySelectorAll("script[src]"));
           scripts.forEach((old) => {
             const s = document.createElement("script");
@@ -368,11 +347,9 @@
             old.replaceWith(s);
           });
 
-          // Endurecimiento básico: links target=_blank con rel seguro
+          // Seguridad básica para target=_blank
           const links = Array.from(mount.querySelectorAll("a[target='_blank'], a[target=\"_blank\"]"));
-          links.forEach((a) => {
-            a.setAttribute("rel", "noopener noreferrer");
-          });
+          links.forEach((a) => a.setAttribute("rel", "noopener noreferrer"));
         }
 
         function showStatus(elStatus, kind, msg) {
@@ -382,33 +359,44 @@
         }
 
         function checkRadioBossRendering() {
-          // Verificación simple: si en 5s sigue vacío, mostrar advertencia útil (no bloqueante).
+          // Menos agresivo: espera 15s (a veces tarda en cargar y consultar metadatos)
           window.setTimeout(() => {
-            const npText = nowPlayingMount.textContent.replace(/\s+/g, " ").trim();
-            const rtText = recentTracksMount.textContent.replace(/\s+/g, " ").trim();
+            // Now Playing: busca los nodos típicos y valida si ya tienen texto real
+            const npArtist = nowPlayingMount.querySelector("[id^='rbcloud_np_a']");
+            const npTitle = nowPlayingMount.querySelector("[id^='rbcloud_np_t']");
+            const npA = (npArtist ? npArtist.textContent : "").replace(/\s+/g, " ").trim();
+            const npT = (npTitle ? npTitle.textContent : "").replace(/\s+/g, " ").trim();
 
-            if (!npText || npText.includes("...")) {
+            const npLooksEmpty = (!npA && (!npT || npT === "..." || npT === "…"));
+
+            // Recent Tracks: valida si hay algún título real distinto de "..."
+            const rtTitles = Array.from(recentTracksMount.querySelectorAll(".rbcloud_recent_title"));
+            const rtHasReal = rtTitles.some((n) => {
+              const t = (n.textContent || "").replace(/\s+/g, " ").trim();
+              return t && t !== "..." && t !== "…";
+            });
+
+            if (npLooksEmpty) {
               showStatus(
                 npStatus,
                 "warn",
-                "Now Playing no se ha actualizado. Esto suele ocurrir si el canal no está publicando metadatos o si el widget no corresponde al canal."
+                "No fue posible actualizar la Reproducción Actual. Verifica que el canal esté publicando metadatos y que el widget corresponda al canal."
               );
             }
 
-            if (!rtText || rtText.includes("...")) {
+            if (!rtHasReal) {
               showStatus(
                 rtStatus,
                 "warn",
-                "Recent Tracks no se ha actualizado. Esto suele ocurrir si el canal no está publicando histórico o si el widget no corresponde al canal."
+                "No fue posible actualizar lo que ha sonado. Verifica que el canal esté publicando histórico y que el widget corresponda al canal."
               );
             }
-          }, 5000);
+          }, 15000);
         }
 
         function renderChannel(name) {
           const ch = state.merged.find((c) => c.name === name);
           if (!ch) {
-            // Si no existe, volver a home
             setQueryChannel("");
             renderHome();
             return;
@@ -418,29 +406,22 @@
           clearMounts();
 
           channelTitle.textContent = ch.name;
-
           document.title = `${ch.name} | Monitoreo Streaming | Musicar S.A.S.`;
 
-          // Player
+          // Player (sin mostrar URL y sin botones extra)
           if (ch.streamUrl) {
             audioPlayer.src = ch.streamUrl;
-            streamUrlLabel.textContent = ch.streamUrl;
-            openStreamLink.href = ch.streamUrl;
-            openStreamLink.removeAttribute("aria-disabled");
-            openStreamLink.classList.remove("btn--disabled");
+            // Fuerza recarga del stream cuando se cambia de canal
+            try { audioPlayer.load(); } catch (_) {}
           } else {
             audioPlayer.removeAttribute("src");
-            streamUrlLabel.textContent = "Stream no configurado para este canal (verifica streams.json).";
-            openStreamLink.href = "#";
-            openStreamLink.setAttribute("aria-disabled", "true");
-            openStreamLink.classList.add("btn--disabled");
           }
 
           // Widgets (exactos)
           injectRadioBossWidget(nowPlayingMount, ch.nowPlayingEmbed);
           injectRadioBossWidget(recentTracksMount, ch.recentTracksEmbed);
 
-          // Validación amable
+          // Chequeo (solo si falla sostenidamente)
           checkRadioBossRendering();
 
           setTopMeta(`Canal seleccionado: ${ch.name}`);
@@ -448,13 +429,8 @@
 
         function route() {
           const c = parseQuery();
-          if (c) {
-            showOnly("channel");
-            renderChannel(c);
-          } else {
-            showOnly("home");
-            renderHome();
-          }
+          if (c) renderChannel(c);
+          else renderHome();
         }
 
         // Eventos
@@ -463,19 +439,11 @@
         btnRetry.addEventListener("click", () => loadConfig());
 
         btnBack.addEventListener("click", () => {
-          // Pausa el audio por higiene operativa (monitoreo)
           try { audioPlayer.pause(); } catch (_) {}
           setQueryChannel("");
           document.title = "Monitoreo Streaming | Musicar S.A.S.";
           setTopMeta(`Configuración cargada • ${state.merged.length} canales`);
           renderHome();
-        });
-
-        btnStop.addEventListener("click", () => {
-          try {
-            audioPlayer.pause();
-            audioPlayer.currentTime = 0;
-          } catch (_) {}
         });
 
         window.addEventListener("popstate", () => route());
