@@ -8,9 +8,9 @@
     <meta name="color-scheme" content="light dark" />
     <meta name="theme-color" content="#0b1220" />
 
-    <!-- CSP ajustada:
-         - media-src: permite orígenes con puerto (streams)
-         - connect-src: permite llamadas XHR/fetch de los widgets RadioBOSS -->
+    <!-- CSP (ajustada para TODOS los canales radioboss.fm actuales y futuros)
+         - img/script/connect: permite https://*.radioboss.fm
+         - media-src: permite streams por https (incluye puertos) -->
     <meta
       http-equiv="Content-Security-Policy"
       content="
@@ -19,24 +19,27 @@
         object-src 'none';
         frame-ancestors 'none';
         upgrade-insecure-requests;
-        img-src 'self' data: https://c38.radioboss.fm https://c9.radioboss.fm https://c11.radioboss.fm;
-        media-src https://c38.radioboss.fm:8216 https://c9.radioboss.fm:8087 https://c9.radioboss.fm:8090 https://c11.radioboss.fm:8282;
-        script-src 'self' 'unsafe-inline' https://c38.radioboss.fm https://c9.radioboss.fm https://c11.radioboss.fm;
+        img-src 'self' data: https://*.radioboss.fm;
+        media-src https:;
+        script-src 'self' 'unsafe-inline' https://*.radioboss.fm;
         style-src 'self' 'unsafe-inline';
-        connect-src 'self' https://c38.radioboss.fm https://c9.radioboss.fm https://c11.radioboss.fm;
+        connect-src 'self' https://*.radioboss.fm;
       "
     />
 
     <link rel="stylesheet" href="./styles.css" />
 
-    <!-- Preconnect -->
+    <!-- Preconnect (mejora tiempos; no es obligatorio) -->
     <link rel="preconnect" href="https://c38.radioboss.fm" crossorigin />
     <link rel="preconnect" href="https://c9.radioboss.fm" crossorigin />
     <link rel="preconnect" href="https://c11.radioboss.fm" crossorigin />
+    <link rel="preconnect" href="https://c15.radioboss.fm" crossorigin />
     <link rel="preconnect" href="https://c38.radioboss.fm:8216" crossorigin />
     <link rel="preconnect" href="https://c9.radioboss.fm:8087" crossorigin />
     <link rel="preconnect" href="https://c9.radioboss.fm:8090" crossorigin />
     <link rel="preconnect" href="https://c11.radioboss.fm:8282" crossorigin />
+    <link rel="preconnect" href="https://c15.radioboss.fm:8272" crossorigin />
+    <link rel="preconnect" href="https://c15.radioboss.fm:8273" crossorigin />
 
     <title>Monitoreo Streaming | Musicar S.A.S.</title>
   </head>
@@ -47,6 +50,7 @@
     <header class="topbar">
       <div class="container topbar__inner">
         <div class="brand brand--center">
+          <!-- Asegúrate de tener Logo_Musicar.png en la raíz del repo -->
           <img class="brand__logo brand__logo--lg" src="./Logo_Musicar.png" alt="Musicar S.A.S." />
           <div class="brand__text brand__text--center">
             <div class="brand__title">Monitoreo de Canales</div>
@@ -123,7 +127,6 @@
 
             <div id="nowPlayingMount" class="rbMount" aria-live="polite"></div>
 
-            <!-- Mantengo estos contenedores pero solo se muestran si realmente hay falla sostenida -->
             <div class="card__footer">
               <div id="npStatus" class="status" hidden></div>
             </div>
@@ -143,7 +146,7 @@
         </div>
       </section>
 
-      <!-- Estado global -->
+      <!-- Error -->
       <section id="viewError" class="panel" hidden>
         <div class="panel__header">
           <h1 class="h1">No fue posible cargar la configuración</h1>
@@ -178,7 +181,6 @@
         const searchInput = el("searchInput");
         const btnReload = el("btnReload");
         const btnRetry = el("btnRetry");
-
         const btnBack = el("btnBack");
 
         const channelTitle = el("channelTitle");
@@ -334,11 +336,11 @@
           rtStatus.textContent = "";
         }
 
-        // Inyecta el HTML EXACTO entregado por RadioBOSS y fuerza ejecución de <script src=...>
+        // Inyecta HTML exacto de RadioBOSS y fuerza ejecución de <script src=...>
         function injectRadioBossWidget(mount, embedHtml) {
           mount.innerHTML = embedHtml || "";
 
-          // Ejecutar scripts externos (innerHTML no ejecuta <script>)
+          // innerHTML NO ejecuta <script>, por eso se reemplazan por scripts reales:
           const scripts = Array.from(mount.querySelectorAll("script[src]"));
           scripts.forEach((old) => {
             const s = document.createElement("script");
@@ -359,17 +361,14 @@
         }
 
         function checkRadioBossRendering() {
-          // Menos agresivo: espera 15s (a veces tarda en cargar y consultar metadatos)
+          // Espera 15s: algunos widgets tardan en cargar y consultar metadatos/histórico
           window.setTimeout(() => {
-            // Now Playing: busca los nodos típicos y valida si ya tienen texto real
             const npArtist = nowPlayingMount.querySelector("[id^='rbcloud_np_a']");
             const npTitle = nowPlayingMount.querySelector("[id^='rbcloud_np_t']");
             const npA = (npArtist ? npArtist.textContent : "").replace(/\s+/g, " ").trim();
             const npT = (npTitle ? npTitle.textContent : "").replace(/\s+/g, " ").trim();
-
             const npLooksEmpty = (!npA && (!npT || npT === "..." || npT === "…"));
 
-            // Recent Tracks: valida si hay algún título real distinto de "..."
             const rtTitles = Array.from(recentTracksMount.querySelectorAll(".rbcloud_recent_title"));
             const rtHasReal = rtTitles.some((n) => {
               const t = (n.textContent || "").replace(/\s+/g, " ").trim();
@@ -408,20 +407,19 @@
           channelTitle.textContent = ch.name;
           document.title = `${ch.name} | Monitoreo Streaming | Musicar S.A.S.`;
 
-          // Player (sin mostrar URL y sin botones extra)
+          // Reproductor (sin mostrar URL)
           if (ch.streamUrl) {
             audioPlayer.src = ch.streamUrl;
-            // Fuerza recarga del stream cuando se cambia de canal
             try { audioPlayer.load(); } catch (_) {}
           } else {
             audioPlayer.removeAttribute("src");
           }
 
-          // Widgets (exactos)
+          // Widgets
           injectRadioBossWidget(nowPlayingMount, ch.nowPlayingEmbed);
           injectRadioBossWidget(recentTracksMount, ch.recentTracksEmbed);
 
-          // Chequeo (solo si falla sostenidamente)
+          // Chequeo de actualización
           checkRadioBossRendering();
 
           setTopMeta(`Canal seleccionado: ${ch.name}`);
