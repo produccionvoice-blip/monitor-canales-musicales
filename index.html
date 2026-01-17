@@ -38,38 +38,93 @@
 
     <title>Monitoreo Streaming | Musicar S.A.S.</title>
 
-    <!-- Ajustes SOLO para el modo canal: maximizar el panel y eliminar "ventana incómoda" -->
+    <!-- Responsive: modo canal ocupa viewport, header compacto y panel 100% alto/ancho -->
     <style>
+      /* Modo canal: el sitio se comporta como app (sin scroll del body) */
       body.is-channel{
-        overflow: hidden; /* evita doble scroll (sitio + iframe) */
-      }
-      body.is-channel .footer{
-        display: none; /* gana espacio vertical en vista canal */
-      }
-
-      /* Panel canal en modo "fill" */
-      .panel--fill{
+        min-height: 100vh;
         display: flex;
         flex-direction: column;
+        overflow: hidden; /* evita scroll del body; el iframe manejará su contenido */
       }
 
+      /* En modo canal, usamos ancho completo */
+      body.is-channel .container{
+        max-width: 100%;
+        width: 100%;
+      }
+
+      /* Compactar header SOLO en modo canal para ganar altura */
+      body.is-channel .topbar__inner{
+        flex-direction: row;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        padding: 10px 0;
+      }
+      body.is-channel .brand--center{
+        flex-direction: row;
+        gap: 12px;
+      }
+      body.is-channel .brand__logo--lg{
+        width: 52px;
+        height: 52px;
+        border-radius: 14px;
+      }
+      body.is-channel .brand__title{
+        font-size: 16px;
+        line-height: 1.1;
+      }
+      body.is-channel .brand__subtitle{
+        display: none;
+      }
+      body.is-channel .topbar__meta{
+        display: none; /* no aporta: el canal ya aparece abajo */
+      }
+
+      /* Main ocupa todo el alto disponible en modo canal */
+      body.is-channel main#main{
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        padding: 10px 10px;
+        overflow: hidden;
+      }
+
+      /* Panel canal ocupa todo el alto del main */
+      .panel--fill{
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        margin-top: 0;
+      }
+
+      /* Breadcrumb responsive: se adapta a pantallas pequeñas */
       .breadcrumb{
         display: flex;
         align-items: center;
         gap: 10px;
+        flex-wrap: wrap;
+      }
+      .breadcrumb__current{
+        min-width: 180px;
       }
       .breadcrumb__spacer{
         flex: 1;
       }
+      @media (max-width: 640px){
+        .breadcrumb__spacer{ display:none; }
+        .breadcrumb{ gap: 8px; }
+        .breadcrumb .btn{ padding: 9px 10px; border-radius: 12px; }
+      }
 
-      /* Área del iframe: ocupa todo el alto disponible (se calcula también con JS) */
+      /* Área del iframe: llena lo restante */
       .frameStage{
-        position: relative;
         flex: 1;
-        padding: 0;
-        border-top: 1px solid var(--border);
-        background: rgba(0,0,0,.04);
         overflow: hidden;
+        border-top: 1px solid var(--border);
+        background: rgba(0,0,0,.03);
         border-radius: 0 0 var(--radius) var(--radius);
       }
       @media (prefers-color-scheme: light){
@@ -83,20 +138,8 @@
         display: block;
       }
 
-      /* Controles flotantes discretos (no muestran URL) */
-      .frameControls{
-        position: absolute;
-        top: 12px;
-        right: 12px;
-        display: flex;
-        gap: 10px;
-        z-index: 2;
-      }
-
-      /* Pantalla completa: mejorar estética */
-      .is-fullscreen .frameStage{
-        border-radius: 0;
-      }
+      /* En modo canal ocultamos el footer para ganar altura */
+      body.is-channel .footer{ display:none; }
     </style>
   </head>
 
@@ -150,7 +193,7 @@
         <div id="channelsGrid" class="grid" aria-live="polite"></div>
       </section>
 
-      <!-- Canal (Panel RadioBOSS en iframe, a pantalla completa dentro del layout) -->
+      <!-- Canal (responsive, ocupa viewport) -->
       <section id="viewChannel" class="panel panel--fill" hidden>
         <div class="breadcrumb">
           <button class="btn btn--ghost" id="btnBack" type="button">← Volver</button>
@@ -162,14 +205,9 @@
           <button class="btn btn--ghost" id="rbReload" type="button" title="Recargar panel">
             Recargar panel
           </button>
-          <button class="btn btn--primary" id="rbFullscreen" type="button" title="Pantalla completa">
-            Pantalla completa
-          </button>
         </div>
 
-        <div id="frameStage" class="frameStage">
-          <div class="frameControls" aria-hidden="true"></div>
-
+        <div class="frameStage">
           <iframe
             id="rbFrame"
             class="rbFrame"
@@ -204,7 +242,7 @@
         "use strict";
 
         const FILE_CHANNELS = "./channels.json";
-        const FILE_STREAMS = "./streams.json"; // opcional, se mantiene por compatibilidad
+        const FILE_STREAMS = "./streams.json"; // opcional (compatibilidad)
 
         const el = (id) => document.getElementById(id);
 
@@ -223,8 +261,6 @@
 
         const rbFrame = el("rbFrame");
         const rbReload = el("rbReload");
-        const rbFullscreen = el("rbFullscreen");
-        const frameStage = el("frameStage");
 
         el("year").textContent = String(new Date().getFullYear());
 
@@ -248,11 +284,8 @@
           viewChannel.hidden = which !== "channel";
           viewError.hidden = which !== "error";
 
-          // Modo canal: maximiza área del panel
+          // modo canal como "app"
           document.body.classList.toggle("is-channel", which === "channel");
-
-          // Ajusta altura cuando cambia vista
-          if (which === "channel") resizeFrame();
         }
 
         function parseQuery() {
@@ -291,12 +324,10 @@
             const streams = Array.isArray(streamsData.streams) ? streamsData.streams : [];
 
             const mapStream = new Map(streams.map((s) => [s.name, s.streamUrl]));
-            const merged = channels.map((ch) => ({
-              ...ch,
-              streamUrl: mapStream.get(ch.name) || ""
-            }));
+            const merged = channels.map((ch) => ({ ...ch, streamUrl: mapStream.get(ch.name) || "" }));
 
             state = { channels, streams, merged };
+
             setTopMeta(`Configuración cargada • ${state.merged.length} canales`);
             route();
           } catch (err) {
@@ -359,14 +390,6 @@
           rbFrame.src = url || "about:blank";
         }
 
-        // Calcula el alto exacto disponible y lo asigna al contenedor del iframe
-        function resizeFrame() {
-          if (viewChannel.hidden) return;
-          const rect = frameStage.getBoundingClientRect();
-          const available = window.innerHeight - rect.top - 12; // margen inferior
-          frameStage.style.height = Math.max(360, Math.floor(available)) + "px";
-        }
-
         function renderChannel(name) {
           const ch = state.merged.find((c) => c.name === name);
           if (!ch) {
@@ -387,9 +410,6 @@
 
           setTopMeta(`Canal seleccionado: ${ch.name}`);
           setFrame(ch.pageUrl);
-
-          // Ajuste después de pintar
-          setTimeout(resizeFrame, 50);
         }
 
         function route() {
@@ -403,23 +423,6 @@
           if (!current || current === "about:blank") return;
           rbFrame.src = "about:blank";
           setTimeout(() => (rbFrame.src = current), 60);
-        }
-
-        async function toggleFullscreen() {
-          try {
-            if (!document.fullscreenElement) {
-              await frameStage.requestFullscreen();
-              document.body.classList.add("is-fullscreen");
-            } else {
-              await document.exitFullscreen();
-              document.body.classList.remove("is-fullscreen");
-            }
-          } catch (e) {
-            // Si el navegador bloquea fullscreen por política, no hacemos nada visible
-            console.error(e);
-          } finally {
-            setTimeout(resizeFrame, 80);
-          }
         }
 
         // Eventos
@@ -436,15 +439,7 @@
         });
 
         rbReload.addEventListener("click", reloadPanel);
-        rbFullscreen.addEventListener("click", toggleFullscreen);
-
-        window.addEventListener("resize", resizeFrame);
         window.addEventListener("popstate", () => route());
-
-        document.addEventListener("fullscreenchange", () => {
-          document.body.classList.toggle("is-fullscreen", !!document.fullscreenElement);
-          setTimeout(resizeFrame, 80);
-        });
 
         // Init
         loadConfig();
