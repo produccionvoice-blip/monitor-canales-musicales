@@ -1,42 +1,41 @@
 {
-  "version": 1,
+  "version": 2,
   "updatedAt": "2026-01-17",
   "provider": "radioboss.fm",
   "channels": [
     {
       "name": "PEPE GANGA",
-      "exampleUrl": "https://c38.radioboss.fm/u/216",
+      "pageUrl": "https://c38.radioboss.fm/u/216",
       "nowPlayingEmbed": "<div class='rbcloud_nowplaying' style='display: flex; align-items: center;'>\n    <div><a target='_blank' href='https://c38.radioboss.fm/w/artwork/216.jpg'><img id='rbcloud_np_c7129' src='https://c38.radioboss.fm/w/artwork/216.jpg' width='65' height='65' alt='cover art'></a>\n</div>\n    <div style='margin-left: 5pt;'><div id='rbcloud_np_a7129' style='font-weight: bold'></div><div id='rbcloud_np_t7129'>...</div></div>\n</div>\n<script src='https://c38.radioboss.fm/w/nowplaying2.js?u=216&amp;wid=7129&amp;tf=1'></script>",
       "recentTracksEmbed": "<div class='rbcloud_recenttracks' id='rbcloud_recent8064' data-cnt='10'>\n    <div class='rbcloud_recent_track' style='display: flex; align-items: center; margin-bottom: 5pt;'>\n        <div class='rbcloud_recent_track_cover' data-size='65'></div>\n        <div style='margin-left: 5pt;'><div class='rbcloud_recent_artist' style='font-weight: bold'></div><div class='rbcloud_recent_title'>...</div></div>\n    </div>\n</div>\n<script src='https://c38.radioboss.fm/w/recent.js?u=216&amp;wid=8064&amp;v=2&amp;tf=1'></script>"
     },
     {
       "name": "MOTOAMERICANA",
-      "exampleUrl": "https://c9.radioboss.fm/u/87",
+      "pageUrl": "https://c9.radioboss.fm/u/87",
       "nowPlayingEmbed": "<div class='rbcloud_nowplaying' style='display: flex; align-items: center;'>\n    <div><a target='_blank' href='https://c9.radioboss.fm/w/artwork/87.jpg'><img id='rbcloud_np_c12074' src='https://c9.radioboss.fm/w/artwork/87.jpg' width='0' height='0' alt='cover art'></a>\n</div>\n    <div style='margin-left: 5pt;'><div id='rbcloud_np_a12074' style='font-weight: bold'></div><div id='rbcloud_np_t12074'>...</div></div>\n</div>\n<script src='https://c9.radioboss.fm/w/nowplaying2.js?u=87&amp;wid=12074'></script>",
       "recentTracksEmbed": "<div class='rbcloud_recenttracks' id='rbcloud_recent5636' data-cnt='10'>\n    <div class='rbcloud_recent_track' style='display: flex; align-items: center; margin-bottom: 5pt;'>\n        <div class='rbcloud_recent_track_cover' data-size='0'></div>\n        <div style='margin-left: 5pt;'><div class='rbcloud_recent_artist' style='font-weight: bold'></div><div class='rbcloud_recent_title'>...</div></div>\n    </div>\n</div>\n<script src='https://c9.radioboss.fm/w/recent.js?u=87&amp;wid=5636&amp;v=2'></script>"
     },
     {
       "name": "AMARILO",
-      "exampleUrl": "https://c9.radioboss.fm/u/90",
+      "pageUrl": "https://c9.radioboss.fm/u/90",
       "nowPlayingEmbed": "<div class='rbcloud_nowplaying' style='display: flex; align-items: center;'>\n    <div><a target='_blank' href='https://c9.radioboss.fm/w/artwork/90.jpg'><img id='rbcloud_np_c2860' src='https://c9.radioboss.fm/w/artwork/90.jpg' width='0' height='0' alt='cover art'></a>\n</div>\n    <div style='margin-left: 5pt;'><div id='rbcloud_np_a2860' style='font-weight: bold'></div><div id='rbcloud_np_t2860'>...</div></div>\n</div>\n<script src='https://c9.radioboss.fm/w/nowplaying2.js?u=90&amp;wid=2860'></script>",
       "recentTracksEmbed": "<div class='rbcloud_recenttracks' id='rbcloud_recent7931' data-cnt='10'>\n    <div class='rbcloud_recent_track' style='display: flex; align-items: center; margin-bottom: 5pt;'>\n        <div class='rbcloud_recent_track_cover' data-size='0'></div>\n        <div style='margin-left: 5pt;'><div class='rbcloud_recent_artist' style='font-weight: bold'></div><div class='rbcloud_recent_title'>...</div></div>\n    </div>\n</div>\n<script src='https://c9.radioboss.fm/w/recent.js?u=90&amp;wid=7931&amp;v=2'></script>"
     },
     {
       "name": "00_MUSICA_POPULAR",
-      "exampleUrl": "https://c11.radioboss.fm/u/282",
+      "pageUrl": "https://c11.radioboss.fm/u/282",
       "nowPlayingEmbed": "<div class='rbcloud_nowplaying' style='display: flex; align-items: center;'>\n    <div><a target='_blank' href='https://c11.radioboss.fm/w/artwork/282.jpg'><img id='rbcloud_np_c1443' src='https://c11.radioboss.fm/w/artwork/282.jpg' width='65' height='65' alt='cover art'></a>\n</div>\n    <div style='margin-left: 5pt;'><div id='rbcloud_np_a1443' style='font-weight: bold'></div><div id='rbcloud_np_t1443'>...</div></div>\n</div>\n<script src='https://c11.radioboss.fm/w/nowplaying2.js?u=282&amp;wid=1443&amp;tf=1'></script>",
       "recentTracksEmbed": "<div class='rbcloud_recenttracks' id='rbcloud_recent2065' data-cnt='10'>\n    <div class='rbcloud_recent_track' style='display: flex; align-items: center; margin-bottom: 5pt;'>\n        <div class='rbcloud_recent_track_cover' data-size='65'></div>\n        <div style='margin-left: 5pt;'><div class='rbcloud_recent_artist' style='font-weight: bold'></div><div class='rbcloud_recent_title'>...</div></div>\n    </div>\n</div>\n<script src='https://c11.radioboss.fm/w/recent.js?u=282&amp;wid=2065&amp;v=2&amp;tf=1'></script>"
     },
-
     {
       "name": "00 TROPICAL",
-      "exampleUrl": "https://c15.radioboss.fm/u/273",
+      "pageUrl": "https://c15.radioboss.fm/u/273",
       "nowPlayingEmbed": "<div class='rbcloud_nowplaying' style='display: flex; align-items: center;'>\n    <div><a target='_blank' href='https://c15.radioboss.fm/w/artwork/273.jpg'><img id='rbcloud_np_c7281' src='https://c15.radioboss.fm/w/artwork/273.jpg' width='65' height='65' alt='cover art'></a>\n</div>\n    <div style='margin-left: 5pt;'><div id='rbcloud_np_a7281' style='font-weight: bold'></div><div id='rbcloud_np_t7281'>...</div></div>\n</div>\n<script src='https://c15.radioboss.fm/w/nowplaying2.js?u=273&amp;wid=7281&amp;tf=1'></script>",
       "recentTracksEmbed": "<div class='rbcloud_recenttracks' id='rbcloud_recent19933' data-cnt='10'>\n    <div class='rbcloud_recent_track' style='display: flex; align-items: center; margin-bottom: 5pt;'>\n        <div class='rbcloud_recent_track_cover' data-size='65'></div>\n        <div style='margin-left: 5pt;'><div class='rbcloud_recent_artist' style='font-weight: bold'></div><div class='rbcloud_recent_title'>...</div></div>\n    </div>\n</div>\n<script src='https://c15.radioboss.fm/w/recent.js?u=273&amp;wid=19933&amp;v=2&amp;tf=1'></script>"
     },
     {
       "name": "00_ADULTO_CONTEMPORANEO",
-      "exampleUrl": "https://c15.radioboss.fm/u/272",
+      "pageUrl": "https://c15.radioboss.fm/u/272",
       "nowPlayingEmbed": "<div class='rbcloud_nowplaying' style='display: flex; align-items: center;'>\n    <div><a target='_blank' href='https://c15.radioboss.fm/w/artwork/272.jpg'><img id='rbcloud_np_c857' src='https://c15.radioboss.fm/w/artwork/272.jpg' width='65' height='65' alt='cover art'></a>\n</div>\n    <div style='margin-left: 5pt;'><div id='rbcloud_np_a857' style='font-weight: bold'></div><div id='rbcloud_np_t857'>...</div></div>\n</div>\n<script src='https://c15.radioboss.fm/w/nowplaying2.js?u=272&amp;wid=857&amp;tf=1'></script>",
       "recentTracksEmbed": "<div class='rbcloud_recenttracks' id='rbcloud_recent6146' data-cnt='10'>\n    <div class='rbcloud_recent_track' style='display: flex; align-items: center; margin-bottom: 5pt;'>\n        <div class='rbcloud_recent_track_cover' data-size='65'></div>\n        <div style='margin-left: 5pt;'><div class='rbcloud_recent_artist' style='font-weight: bold'></div><div class='rbcloud_recent_title'>...</div></div>\n    </div>\n</div>\n<script src='https://c15.radioboss.fm/w/recent.js?u=272&amp;wid=6146&amp;v=2&amp;tf=1'></script>"
     }
