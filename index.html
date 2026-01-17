@@ -38,23 +38,24 @@
 
     <title>Monitoreo Streaming | Musicar S.A.S.</title>
 
-    <!-- Responsive: modo canal ocupa viewport, header compacto y panel 100% alto/ancho -->
     <style>
-      /* Modo canal: el sitio se comporta como app (sin scroll del body) */
+      /* CLAVE: evita que styles.css anule el atributo hidden */
+      [hidden]{ display: none !important; }
+
+      /* Responsive: modo canal ocupa viewport, header compacto y panel 100% alto/ancho */
       body.is-channel{
         min-height: 100vh;
         display: flex;
         flex-direction: column;
-        overflow: hidden; /* evita scroll del body; el iframe manejará su contenido */
+        overflow: hidden;
       }
 
-      /* En modo canal, usamos ancho completo */
       body.is-channel .container{
         max-width: 100%;
         width: 100%;
       }
 
-      /* Compactar header SOLO en modo canal para ganar altura */
+      /* Compactar header SOLO en modo canal */
       body.is-channel .topbar__inner{
         flex-direction: row;
         align-items: center;
@@ -75,14 +76,9 @@
         font-size: 16px;
         line-height: 1.1;
       }
-      body.is-channel .brand__subtitle{
-        display: none;
-      }
-      body.is-channel .topbar__meta{
-        display: none; /* no aporta: el canal ya aparece abajo */
-      }
+      body.is-channel .brand__subtitle{ display: none; }
+      body.is-channel .topbar__meta{ display: none; }
 
-      /* Main ocupa todo el alto disponible en modo canal */
       body.is-channel main#main{
         flex: 1;
         display: flex;
@@ -91,7 +87,6 @@
         overflow: hidden;
       }
 
-      /* Panel canal ocupa todo el alto del main */
       .panel--fill{
         flex: 1;
         display: flex;
@@ -100,26 +95,21 @@
         margin-top: 0;
       }
 
-      /* Breadcrumb responsive: se adapta a pantallas pequeñas */
       .breadcrumb{
         display: flex;
         align-items: center;
         gap: 10px;
         flex-wrap: wrap;
       }
-      .breadcrumb__current{
-        min-width: 180px;
-      }
-      .breadcrumb__spacer{
-        flex: 1;
-      }
+      .breadcrumb__current{ min-width: 180px; }
+      .breadcrumb__spacer{ flex: 1; }
+
       @media (max-width: 640px){
         .breadcrumb__spacer{ display:none; }
         .breadcrumb{ gap: 8px; }
         .breadcrumb .btn{ padding: 9px 10px; border-radius: 12px; }
       }
 
-      /* Área del iframe: llena lo restante */
       .frameStage{
         flex: 1;
         overflow: hidden;
@@ -138,7 +128,6 @@
         display: block;
       }
 
-      /* En modo canal ocultamos el footer para ganar altura */
       body.is-channel .footer{ display:none; }
     </style>
   </head>
@@ -193,7 +182,7 @@
         <div id="channelsGrid" class="grid" aria-live="polite"></div>
       </section>
 
-      <!-- Canal (responsive, ocupa viewport) -->
+      <!-- Canal -->
       <section id="viewChannel" class="panel panel--fill" hidden>
         <div class="breadcrumb">
           <button class="btn btn--ghost" id="btnBack" type="button">← Volver</button>
@@ -284,7 +273,6 @@
           viewChannel.hidden = which !== "channel";
           viewError.hidden = which !== "error";
 
-          // modo canal como "app"
           document.body.classList.toggle("is-channel", which === "channel");
         }
 
@@ -309,6 +297,12 @@
           const res = await fetch(url, { cache: "no-store" });
           if (!res.ok) throw new Error(`Error HTTP ${res.status} al cargar ${url}`);
           return res.json();
+        }
+
+        function clearChannelState() {
+          channelTitle.textContent = "";
+          rbFrame.src = "about:blank";
+          document.title = "Monitoreo Streaming | Musicar S.A.S.";
         }
 
         async function loadConfig() {
@@ -366,7 +360,9 @@
         }
 
         function renderHome() {
+          clearChannelState();      // clave: limpia iframe/título
           showOnly("home");
+
           channelsGrid.innerHTML = "";
           channelsGrid.setAttribute("role", "list");
 
@@ -386,10 +382,6 @@
           for (const ch of list) channelsGrid.appendChild(createChannelCard(ch));
         }
 
-        function setFrame(url) {
-          rbFrame.src = url || "about:blank";
-        }
-
         function renderChannel(name) {
           const ch = state.merged.find((c) => c.name === name);
           if (!ch) {
@@ -404,12 +396,12 @@
 
           if (!ch.pageUrl) {
             setTopMeta(`Canal seleccionado: ${ch.name} (sin Page URL)`);
-            setFrame("");
+            rbFrame.src = "about:blank";
             return;
           }
 
           setTopMeta(`Canal seleccionado: ${ch.name}`);
-          setFrame(ch.pageUrl);
+          rbFrame.src = ch.pageUrl;
         }
 
         function route() {
@@ -431,9 +423,7 @@
         btnRetry.addEventListener("click", () => loadConfig());
 
         btnBack.addEventListener("click", () => {
-          setFrame("");
           setQueryChannel("");
-          document.title = "Monitoreo Streaming | Musicar S.A.S.";
           setTopMeta(`Configuración cargada • ${state.merged.length} canales`);
           renderHome();
         });
