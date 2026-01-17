@@ -8,9 +8,7 @@
     <meta name="color-scheme" content="light dark" />
     <meta name="theme-color" content="#0b1220" />
 
-    <!-- CSP (ajustada para TODOS los canales radioboss.fm actuales y futuros)
-         - img/script/connect: permite https://*.radioboss.fm
-         - media-src: permite streams por https (incluye puertos) -->
+    <!-- CSP (permite widgets y, adicionalmente, embedding de Page URL en iframe) -->
     <meta
       http-equiv="Content-Security-Policy"
       content="
@@ -19,29 +17,61 @@
         object-src 'none';
         frame-ancestors 'none';
         upgrade-insecure-requests;
+
         img-src 'self' data: https://*.radioboss.fm;
         media-src https:;
         script-src 'self' 'unsafe-inline' https://*.radioboss.fm;
         style-src 'self' 'unsafe-inline';
         connect-src 'self' https://*.radioboss.fm;
+
+        frame-src https://*.radioboss.fm;
+        child-src https://*.radioboss.fm;
       "
     />
 
     <link rel="stylesheet" href="./styles.css" />
 
-    <!-- Preconnect (mejora tiempos; no es obligatorio) -->
     <link rel="preconnect" href="https://c38.radioboss.fm" crossorigin />
     <link rel="preconnect" href="https://c9.radioboss.fm" crossorigin />
     <link rel="preconnect" href="https://c11.radioboss.fm" crossorigin />
     <link rel="preconnect" href="https://c15.radioboss.fm" crossorigin />
-    <link rel="preconnect" href="https://c38.radioboss.fm:8216" crossorigin />
-    <link rel="preconnect" href="https://c9.radioboss.fm:8087" crossorigin />
-    <link rel="preconnect" href="https://c9.radioboss.fm:8090" crossorigin />
-    <link rel="preconnect" href="https://c11.radioboss.fm:8282" crossorigin />
-    <link rel="preconnect" href="https://c15.radioboss.fm:8272" crossorigin />
-    <link rel="preconnect" href="https://c15.radioboss.fm:8273" crossorigin />
 
     <title>Monitoreo Streaming | Musicar S.A.S.</title>
+
+    <style>
+      /* Estilos mínimos para el iframe (si prefieres, pásalos a styles.css) */
+      .rbFrameWrap{
+        padding: 16px 16px 16px 16px;
+      }
+      .rbFrame{
+        width: 100%;
+        height: min(78vh, 820px);
+        border: 1px solid rgba(255,255,255,.10);
+        border-radius: 16px;
+        background: rgba(0,0,0,.06);
+      }
+      @media (prefers-color-scheme: light){
+        .rbFrame{
+          border-color: rgba(0,0,0,.10);
+          background: rgba(0,0,0,.03);
+        }
+      }
+      .rbFrameActions{
+        display:flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-top: 12px;
+        align-items:center;
+      }
+      .rbHint{
+        margin-top: 10px;
+        color: rgba(255,255,255,.68);
+        font-size: 12.5px;
+      }
+      @media (prefers-color-scheme: light){
+        .rbHint{ color: rgba(0,0,0,.60); }
+      }
+    </style>
   </head>
 
   <body>
@@ -50,7 +80,6 @@
     <header class="topbar">
       <div class="container topbar__inner">
         <div class="brand brand--center">
-          <!-- Asegúrate de tener Logo_Musicar.png en la raíz del repo -->
           <img class="brand__logo brand__logo--lg" src="./Logo_Musicar.png" alt="Musicar S.A.S." />
           <div class="brand__text brand__text--center">
             <div class="brand__title">Monitoreo de Canales</div>
@@ -68,7 +97,7 @@
         <div class="panel__header">
           <h1 class="h1">Canales</h1>
           <p class="muted">
-            Busca por nombre del canal y selecciona uno para ver el reproductor, la reproducción actual y lo que ha sonado.
+            Busca por nombre del canal y selecciona uno para ver el panel de RadioBOSS (reproductor + reproducción actual + lo que ha sonado).
           </p>
         </div>
 
@@ -95,7 +124,7 @@
         <div id="channelsGrid" class="grid" aria-live="polite"></div>
       </section>
 
-      <!-- Vista Canal -->
+      <!-- Vista Canal (usa Page URL en iframe) -->
       <section id="viewChannel" class="panel" hidden>
         <div class="breadcrumb">
           <button class="btn btn--ghost" id="btnBack" type="button">← Volver</button>
@@ -104,43 +133,33 @@
         </div>
 
         <div class="channelLayout">
-          <section class="card">
-            <div class="card__header">
-              <h2 class="h2">Reproductor</h2>
-            </div>
-
-            <div class="player">
-              <audio id="audioPlayer" class="player__audio" controls preload="none">
-                Tu navegador no soporta reproducción de audio HTML5.
-              </audio>
-
-              <div class="player__hint muted">
-                Si el audio no inicia, valida que el stream esté activo y que la red permita la salida por el puerto correspondiente.
-              </div>
-            </div>
-          </section>
-
-          <section class="card">
-            <div class="card__header">
-              <h2 class="h2">Reproducción Actual</h2>
-            </div>
-
-            <div id="nowPlayingMount" class="rbMount" aria-live="polite"></div>
-
-            <div class="card__footer">
-              <div id="npStatus" class="status" hidden></div>
-            </div>
-          </section>
-
           <section class="card card--full">
             <div class="card__header">
-              <h2 class="h2">Lo que ha sonado</h2>
+              <h2 class="h2">Panel del Canal</h2>
             </div>
 
-            <div id="recentTracksMount" class="rbMount" aria-live="polite"></div>
+            <div class="rbFrameWrap">
+              <iframe
+                id="rbFrame"
+                class="rbFrame"
+                title="Panel RadioBOSS"
+                loading="lazy"
+                referrerpolicy="strict-origin-when-cross-origin"
+                sandbox="allow-scripts allow-forms allow-same-origin allow-popups"
+              ></iframe>
 
-            <div class="card__footer">
-              <div id="rtStatus" class="status" hidden></div>
+              <div class="rbFrameActions">
+                <a id="rbOpen" class="btn btn--primary" href="#" target="_blank" rel="noopener noreferrer">
+                  Abrir panel de RadioBOSS
+                </a>
+                <button class="btn btn--ghost" id="rbReload" type="button" title="Recargar panel">
+                  Recargar panel
+                </button>
+              </div>
+
+              <div class="rbHint" id="rbHint">
+                Si el panel no aparece dentro de la página, es posible que RadioBOSS bloquee el uso en iframe. En ese caso usa “Abrir panel de RadioBOSS”.
+              </div>
             </div>
           </section>
         </div>
@@ -169,7 +188,7 @@
         "use strict";
 
         const FILE_WIDGETS = "./channels.json";
-        const FILE_STREAMS = "./streams.json";
+        const FILE_STREAMS = "./streams.json"; // Se conserva por compatibilidad, aunque el iframe no lo necesita.
 
         const el = (id) => document.getElementById(id);
 
@@ -184,15 +203,13 @@
         const btnBack = el("btnBack");
 
         const channelTitle = el("channelTitle");
-        const audioPlayer = el("audioPlayer");
-
-        const nowPlayingMount = el("nowPlayingMount");
-        const recentTracksMount = el("recentTracksMount");
-
-        const npStatus = el("npStatus");
-        const rtStatus = el("rtStatus");
-
         const topMeta = el("topMeta");
+
+        const rbFrame = el("rbFrame");
+        const rbOpen = el("rbOpen");
+        const rbReload = el("rbReload");
+        const rbHint = el("rbHint");
+
         el("year").textContent = String(new Date().getFullYear());
 
         let state = {
@@ -250,7 +267,13 @@
           viewHome.hidden = true;
 
           try {
-            const [widgets, streams] = await Promise.all([loadJson(FILE_WIDGETS), loadJson(FILE_STREAMS)]);
+            // streams.json se mantiene (por si luego vuelves a usar player propio),
+            // pero para el iframe lo esencial es channels.json con pageUrl / exampleUrl.
+            const [widgets, streams] = await Promise.all([
+              loadJson(FILE_WIDGETS),
+              loadJson(FILE_STREAMS).catch(() => ({ streams: [] }))
+            ]);
+
             const channels = Array.isArray(widgets.channels) ? widgets.channels : [];
             const streamList = Array.isArray(streams.streams) ? streams.streams : [];
 
@@ -297,7 +320,9 @@
 
           const meta = document.createElement("div");
           meta.className = "cardLink__meta";
-          meta.textContent = ch.streamUrl ? "Stream configurado" : "Stream pendiente";
+
+          const pageUrl = ch.pageUrl || ch.exampleUrl || "";
+          meta.textContent = pageUrl ? "Panel RadioBOSS disponible" : "Panel no configurado";
 
           a.appendChild(title);
           a.appendChild(meta);
@@ -327,70 +352,10 @@
           for (const ch of list) channelsGrid.appendChild(createChannelCard(ch));
         }
 
-        function clearMounts() {
-          nowPlayingMount.innerHTML = "";
-          recentTracksMount.innerHTML = "";
-          npStatus.hidden = true;
-          rtStatus.hidden = true;
-          npStatus.textContent = "";
-          rtStatus.textContent = "";
-        }
-
-        // Inyecta HTML exacto de RadioBOSS y fuerza ejecución de <script src=...>
-        function injectRadioBossWidget(mount, embedHtml) {
-          mount.innerHTML = embedHtml || "";
-
-          // innerHTML NO ejecuta <script>, por eso se reemplazan por scripts reales:
-          const scripts = Array.from(mount.querySelectorAll("script[src]"));
-          scripts.forEach((old) => {
-            const s = document.createElement("script");
-            s.src = old.getAttribute("src");
-            s.async = true;
-            old.replaceWith(s);
-          });
-
-          // Seguridad básica para target=_blank
-          const links = Array.from(mount.querySelectorAll("a[target='_blank'], a[target=\"_blank\"]"));
-          links.forEach((a) => a.setAttribute("rel", "noopener noreferrer"));
-        }
-
-        function showStatus(elStatus, kind, msg) {
-          elStatus.hidden = false;
-          elStatus.className = `status status--${kind}`;
-          elStatus.textContent = msg;
-        }
-
-        function checkRadioBossRendering() {
-          // Espera 15s: algunos widgets tardan en cargar y consultar metadatos/histórico
-          window.setTimeout(() => {
-            const npArtist = nowPlayingMount.querySelector("[id^='rbcloud_np_a']");
-            const npTitle = nowPlayingMount.querySelector("[id^='rbcloud_np_t']");
-            const npA = (npArtist ? npArtist.textContent : "").replace(/\s+/g, " ").trim();
-            const npT = (npTitle ? npTitle.textContent : "").replace(/\s+/g, " ").trim();
-            const npLooksEmpty = (!npA && (!npT || npT === "..." || npT === "…"));
-
-            const rtTitles = Array.from(recentTracksMount.querySelectorAll(".rbcloud_recent_title"));
-            const rtHasReal = rtTitles.some((n) => {
-              const t = (n.textContent || "").replace(/\s+/g, " ").trim();
-              return t && t !== "..." && t !== "…";
-            });
-
-            if (npLooksEmpty) {
-              showStatus(
-                npStatus,
-                "warn",
-                "No fue posible actualizar la Reproducción Actual. Verifica que el canal esté publicando metadatos y que el widget corresponda al canal."
-              );
-            }
-
-            if (!rtHasReal) {
-              showStatus(
-                rtStatus,
-                "warn",
-                "No fue posible actualizar lo que ha sonado. Verifica que el canal esté publicando histórico y que el widget corresponda al canal."
-              );
-            }
-          }, 15000);
+        function setFrame(url) {
+          rbFrame.src = url || "about:blank";
+          rbOpen.href = url || "#";
+          rbOpen.setAttribute("aria-disabled", url ? "false" : "true");
         }
 
         function renderChannel(name) {
@@ -402,27 +367,24 @@
           }
 
           showOnly("channel");
-          clearMounts();
-
           channelTitle.textContent = ch.name;
           document.title = `${ch.name} | Monitoreo Streaming | Musicar S.A.S.`;
 
-          // Reproductor (sin mostrar URL)
-          if (ch.streamUrl) {
-            audioPlayer.src = ch.streamUrl;
-            try { audioPlayer.load(); } catch (_) {}
-          } else {
-            audioPlayer.removeAttribute("src");
+          const pageUrl = ch.pageUrl || ch.exampleUrl || "";
+
+          if (!pageUrl) {
+            setTopMeta(`Canal seleccionado: ${ch.name} (sin Page URL)`);
+            rbHint.textContent =
+              "Este canal no tiene Page URL configurada en channels.json. Agrega pageUrl o exampleUrl con la ruta /u/xxx de RadioBOSS.";
+            setFrame("");
+            return;
           }
 
-          // Widgets
-          injectRadioBossWidget(nowPlayingMount, ch.nowPlayingEmbed);
-          injectRadioBossWidget(recentTracksMount, ch.recentTracksEmbed);
-
-          // Chequeo de actualización
-          checkRadioBossRendering();
-
           setTopMeta(`Canal seleccionado: ${ch.name}`);
+          rbHint.textContent =
+            "Si el panel no aparece dentro de la página, es posible que RadioBOSS bloquee el uso en iframe. En ese caso usa “Abrir panel de RadioBOSS”.";
+
+          setFrame(pageUrl);
         }
 
         function route() {
@@ -437,11 +399,19 @@
         btnRetry.addEventListener("click", () => loadConfig());
 
         btnBack.addEventListener("click", () => {
-          try { audioPlayer.pause(); } catch (_) {}
+          setFrame("");
           setQueryChannel("");
           document.title = "Monitoreo Streaming | Musicar S.A.S.";
           setTopMeta(`Configuración cargada • ${state.merged.length} canales`);
           renderHome();
+        });
+
+        rbReload.addEventListener("click", () => {
+          // Fuerza recarga del iframe sin cambiar URL
+          const current = rbFrame.src;
+          if (!current || current === "about:blank") return;
+          rbFrame.src = "about:blank";
+          setTimeout(() => (rbFrame.src = current), 50);
         });
 
         window.addEventListener("popstate", () => route());
