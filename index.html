@@ -8,7 +8,7 @@
     <meta name="color-scheme" content="light dark" />
     <meta name="theme-color" content="#0b1220" />
 
-    <!-- CSP: permite cargar recursos de radioboss y, además, embeber el Page URL en iframe -->
+    <!-- CSP: permite cargar radioboss y embeber Page URL en iframe -->
     <meta
       http-equiv="Content-Security-Policy"
       content="
@@ -38,35 +38,64 @@
 
     <title>Monitoreo Streaming | Musicar S.A.S.</title>
 
+    <!-- Ajustes SOLO para el modo canal: maximizar el panel y eliminar "ventana incómoda" -->
     <style>
-      .rbFrameWrap{ padding: 16px; }
+      body.is-channel{
+        overflow: hidden; /* evita doble scroll (sitio + iframe) */
+      }
+      body.is-channel .footer{
+        display: none; /* gana espacio vertical en vista canal */
+      }
+
+      /* Panel canal en modo "fill" */
+      .panel--fill{
+        display: flex;
+        flex-direction: column;
+      }
+
+      .breadcrumb{
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .breadcrumb__spacer{
+        flex: 1;
+      }
+
+      /* Área del iframe: ocupa todo el alto disponible (se calcula también con JS) */
+      .frameStage{
+        position: relative;
+        flex: 1;
+        padding: 0;
+        border-top: 1px solid var(--border);
+        background: rgba(0,0,0,.04);
+        overflow: hidden;
+        border-radius: 0 0 var(--radius) var(--radius);
+      }
+      @media (prefers-color-scheme: light){
+        .frameStage{ background: rgba(0,0,0,.02); }
+      }
+
       .rbFrame{
         width: 100%;
-        height: min(78vh, 820px);
-        border: 1px solid rgba(255,255,255,.10);
-        border-radius: 16px;
-        background: rgba(0,0,0,.06);
+        height: 100%;
+        border: 0;
+        display: block;
       }
-      @media (prefers-color-scheme: light){
-        .rbFrame{
-          border-color: rgba(0,0,0,.10);
-          background: rgba(0,0,0,.03);
-        }
-      }
-      .rbFrameActions{
-        display:flex;
+
+      /* Controles flotantes discretos (no muestran URL) */
+      .frameControls{
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        display: flex;
         gap: 10px;
-        flex-wrap: wrap;
-        margin-top: 12px;
-        align-items:center;
+        z-index: 2;
       }
-      .rbHint{
-        margin-top: 10px;
-        color: rgba(255,255,255,.68);
-        font-size: 12.5px;
-      }
-      @media (prefers-color-scheme: light){
-        .rbHint{ color: rgba(0,0,0,.60); }
+
+      /* Pantalla completa: mejorar estética */
+      .is-fullscreen .frameStage{
+        border-radius: 0;
       }
     </style>
   </head>
@@ -94,7 +123,7 @@
         <div class="panel__header">
           <h1 class="h1">Canales</h1>
           <p class="muted">
-            Busca por nombre del canal y selecciona uno para ver el panel de RadioBOSS (reproductor + reproducción actual + lo que ha sonado).
+            Busca por nombre del canal y selecciona uno para ver el panel del canal dentro del blog (sin exponer URLs).
           </p>
         </div>
 
@@ -112,51 +141,43 @@
           </label>
 
           <div class="toolbar__right">
-            <button class="btn btn--ghost" id="btnReload" type="button" title="Recargar configuración">Recargar</button>
+            <button class="btn btn--ghost" id="btnReload" type="button" title="Recargar configuración">
+              Recargar
+            </button>
           </div>
         </div>
 
         <div id="channelsGrid" class="grid" aria-live="polite"></div>
       </section>
 
-      <!-- Canal -->
-      <section id="viewChannel" class="panel" hidden>
+      <!-- Canal (Panel RadioBOSS en iframe, a pantalla completa dentro del layout) -->
+      <section id="viewChannel" class="panel panel--fill" hidden>
         <div class="breadcrumb">
           <button class="btn btn--ghost" id="btnBack" type="button">← Volver</button>
           <div class="breadcrumb__sep" aria-hidden="true">/</div>
           <div class="breadcrumb__current" id="channelTitle" aria-live="polite"></div>
+
+          <div class="breadcrumb__spacer"></div>
+
+          <button class="btn btn--ghost" id="rbReload" type="button" title="Recargar panel">
+            Recargar panel
+          </button>
+          <button class="btn btn--primary" id="rbFullscreen" type="button" title="Pantalla completa">
+            Pantalla completa
+          </button>
         </div>
 
-        <div class="channelLayout">
-          <section class="card card--full">
-            <div class="card__header">
-              <h2 class="h2">Panel del Canal</h2>
-            </div>
+        <div id="frameStage" class="frameStage">
+          <div class="frameControls" aria-hidden="true"></div>
 
-            <div class="rbFrameWrap">
-              <iframe
-                id="rbFrame"
-                class="rbFrame"
-                title="Panel RadioBOSS"
-                loading="lazy"
-                referrerpolicy="strict-origin-when-cross-origin"
-                sandbox="allow-scripts allow-forms allow-same-origin allow-popups"
-              ></iframe>
-
-              <div class="rbFrameActions">
-                <a id="rbOpen" class="btn btn--primary" href="#" target="_blank" rel="noopener noreferrer">
-                  Abrir panel de RadioBOSS
-                </a>
-                <button class="btn btn--ghost" id="rbReload" type="button" title="Recargar panel">
-                  Recargar panel
-                </button>
-              </div>
-
-              <div class="rbHint" id="rbHint">
-                Si el panel no aparece dentro de la página, es posible que RadioBOSS bloquee el uso en iframe. En ese caso usa “Abrir panel de RadioBOSS”.
-              </div>
-            </div>
-          </section>
+          <iframe
+            id="rbFrame"
+            class="rbFrame"
+            title="Panel RadioBOSS"
+            loading="lazy"
+            referrerpolicy="strict-origin-when-cross-origin"
+            sandbox="allow-scripts allow-forms allow-same-origin allow-popups"
+          ></iframe>
         </div>
       </section>
 
@@ -183,7 +204,7 @@
         "use strict";
 
         const FILE_CHANNELS = "./channels.json";
-        const FILE_STREAMS = "./streams.json"; // se mantiene (opcional / compatibilidad)
+        const FILE_STREAMS = "./streams.json"; // opcional, se mantiene por compatibilidad
 
         const el = (id) => document.getElementById(id);
 
@@ -201,17 +222,13 @@
         const topMeta = el("topMeta");
 
         const rbFrame = el("rbFrame");
-        const rbOpen = el("rbOpen");
         const rbReload = el("rbReload");
-        const rbHint = el("rbHint");
+        const rbFullscreen = el("rbFullscreen");
+        const frameStage = el("frameStage");
 
         el("year").textContent = String(new Date().getFullYear());
 
-        let state = {
-          channels: [],
-          streams: [],
-          merged: []
-        };
+        let state = { channels: [], streams: [], merged: [] };
 
         function normalizeText(s) {
           return (s || "")
@@ -222,14 +239,20 @@
             .trim();
         }
 
+        function setTopMeta(text) {
+          topMeta.textContent = text || "";
+        }
+
         function showOnly(which) {
           viewHome.hidden = which !== "home";
           viewChannel.hidden = which !== "channel";
           viewError.hidden = which !== "error";
-        }
 
-        function setTopMeta(text) {
-          topMeta.textContent = text || "";
+          // Modo canal: maximiza área del panel
+          document.body.classList.toggle("is-channel", which === "channel");
+
+          // Ajusta altura cuando cambia vista
+          if (which === "channel") resizeFrame();
         }
 
         function parseQuery() {
@@ -262,8 +285,6 @@
 
           try {
             const channelsData = await loadJson(FILE_CHANNELS);
-
-            // streams.json es opcional (no bloquea si falta)
             const streamsData = await loadJson(FILE_STREAMS).catch(() => ({ streams: [] }));
 
             const channels = Array.isArray(channelsData.channels) ? channelsData.channels : [];
@@ -276,7 +297,6 @@
             }));
 
             state = { channels, streams, merged };
-
             setTopMeta(`Configuración cargada • ${state.merged.length} canales`);
             route();
           } catch (err) {
@@ -307,7 +327,7 @@
 
           const meta = document.createElement("div");
           meta.className = "cardLink__meta";
-          meta.textContent = ch.pageUrl ? "Panel RadioBOSS disponible" : "Panel no configurado";
+          meta.textContent = ch.pageUrl ? "Panel disponible" : "Panel no configurado";
 
           a.appendChild(title);
           a.appendChild(meta);
@@ -316,7 +336,6 @@
 
         function renderHome() {
           showOnly("home");
-
           channelsGrid.innerHTML = "";
           channelsGrid.setAttribute("role", "list");
 
@@ -338,8 +357,14 @@
 
         function setFrame(url) {
           rbFrame.src = url || "about:blank";
-          rbOpen.href = url || "#";
-          rbOpen.setAttribute("aria-disabled", url ? "false" : "true");
+        }
+
+        // Calcula el alto exacto disponible y lo asigna al contenedor del iframe
+        function resizeFrame() {
+          if (viewChannel.hidden) return;
+          const rect = frameStage.getBoundingClientRect();
+          const available = window.innerHeight - rect.top - 12; // margen inferior
+          frameStage.style.height = Math.max(360, Math.floor(available)) + "px";
         }
 
         function renderChannel(name) {
@@ -356,23 +381,45 @@
 
           if (!ch.pageUrl) {
             setTopMeta(`Canal seleccionado: ${ch.name} (sin Page URL)`);
-            rbHint.textContent =
-              "Este canal no tiene Page URL configurada en channels.json. Agrega pageUrl con la ruta /u/xxx de RadioBOSS.";
             setFrame("");
             return;
           }
 
           setTopMeta(`Canal seleccionado: ${ch.name}`);
-          rbHint.textContent =
-            "Si el panel no aparece dentro de la página, es posible que RadioBOSS bloquee el uso en iframe. En ese caso usa “Abrir panel de RadioBOSS”.";
-
           setFrame(ch.pageUrl);
+
+          // Ajuste después de pintar
+          setTimeout(resizeFrame, 50);
         }
 
         function route() {
           const c = parseQuery();
           if (c) renderChannel(c);
           else renderHome();
+        }
+
+        function reloadPanel() {
+          const current = rbFrame.src;
+          if (!current || current === "about:blank") return;
+          rbFrame.src = "about:blank";
+          setTimeout(() => (rbFrame.src = current), 60);
+        }
+
+        async function toggleFullscreen() {
+          try {
+            if (!document.fullscreenElement) {
+              await frameStage.requestFullscreen();
+              document.body.classList.add("is-fullscreen");
+            } else {
+              await document.exitFullscreen();
+              document.body.classList.remove("is-fullscreen");
+            }
+          } catch (e) {
+            // Si el navegador bloquea fullscreen por política, no hacemos nada visible
+            console.error(e);
+          } finally {
+            setTimeout(resizeFrame, 80);
+          }
         }
 
         // Eventos
@@ -388,14 +435,16 @@
           renderHome();
         });
 
-        rbReload.addEventListener("click", () => {
-          const current = rbFrame.src;
-          if (!current || current === "about:blank") return;
-          rbFrame.src = "about:blank";
-          setTimeout(() => (rbFrame.src = current), 50);
-        });
+        rbReload.addEventListener("click", reloadPanel);
+        rbFullscreen.addEventListener("click", toggleFullscreen);
 
+        window.addEventListener("resize", resizeFrame);
         window.addEventListener("popstate", () => route());
+
+        document.addEventListener("fullscreenchange", () => {
+          document.body.classList.toggle("is-fullscreen", !!document.fullscreenElement);
+          setTimeout(resizeFrame, 80);
+        });
 
         // Init
         loadConfig();
