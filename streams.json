@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "updatedAt": "2026-01-17",
+  "streams": [
+    {
+      "name": "PEPE GANGA",
+      "streamUrl": "https://c38.radioboss.fm:8216/stream"
+    },
+    {
+      "name": "MOTOAMERICANA",
+      "streamUrl": "https://c9.radioboss.fm:8087/stream"
+    },
+    {
+      "name": "AMARILO",
+      "streamUrl": "https://c9.radioboss.fm:8090/stream"
+    },
+    {
+      "name": "00_MUSICA_POPULAR",
+      "streamUrl": "https://c11.radioboss.fm:8282/stream"
+    }
+  ]
+}
