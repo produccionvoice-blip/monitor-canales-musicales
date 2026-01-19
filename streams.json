@@ -1,12 +1,17 @@
 {
-  "version": 2,
-  "updatedAt": "2026-01-17",
+  "version": 3,
+  "updatedAt": "2026-01-19",
   "streams": [
     { "name": "00_MUSICA_POPULAR", "streamUrl": "https://c11.radioboss.fm:8282/stream" },
     { "name": "00 TROPICAL", "streamUrl": "https://c15.radioboss.fm:8273/stream" },
     { "name": "00_ADULTO_CONTEMPORANEO", "streamUrl": "https://c15.radioboss.fm:8272/stream" },
     { "name": "AMARILO", "streamUrl": "https://c9.radioboss.fm:8090/stream" },
     { "name": "MOTOAMERICANA", "streamUrl": "https://c9.radioboss.fm:8087/stream" },
-    { "name": "PEPE GANGA", "streamUrl": "https://c38.radioboss.fm:8216/stream" }
+    { "name": "ALMACENES_MAXIMO", "streamUrl": "https://c38.radioboss.fm:8216/stream" },
+    { "name": "00_CHILLOOUT", "streamUrl": "https://c2.radioboss.fm:8241/stream" },
+    { "name": "00_CLASICO", "streamUrl": "https://c13.radioboss.fm:8411/stream" },
+    { "name": "00_CRISTIANO", "streamUrl": "https://c13.radioboss.fm:8401/stream" },
+    { "name": "00_CROSSOVER", "streamUrl": "https://c15.radioboss.fm:8274/stream" },
+    { "name": "00_ELECTRONICO", "streamUrl": "https://c3.radioboss.fm:8277/stream" }
   ]
 }
