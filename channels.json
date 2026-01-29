@@ -1,6 +1,6 @@
 {
-  "version": 4,
-  "updatedAt": "2026-01-19",
+  "version": 5,
+  "updatedAt": "2026-01-29",
   "provider": "radioboss.fm",
   "channels": [
     { "name": "00_MUSICA_POPULAR", "pageUrl": "https://c11.radioboss.fm/u/282" },
@@ -13,6 +13,7 @@
     { "name": "00_CLASICO", "pageUrl": "https://c13.radioboss.fm/u/411" },
     { "name": "00_CRISTIANO", "pageUrl": "https://c13.radioboss.fm/u/401" },
     { "name": "00_CROSSOVER", "pageUrl": "https://c15.radioboss.fm/u/274" },
-    { "name": "00_ELECTRONICO", "pageUrl": "https://c3.radioboss.fm/u/277" }
+    { "name": "00_ELECTRONICO", "pageUrl": "https://c3.radioboss.fm/u/277" },
+    { "name": "DEMOS_PRODUCCION", "pageUrl": "https://c46.radioboss.fm/u/281" }
   ]
 }
