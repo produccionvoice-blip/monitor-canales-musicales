@@ -52,7 +52,7 @@
     },
     {
       "name": "00_EVENTOS_2",
-      "streamUrl": "https://c15.radioboss.fm/u/388"
+      "streamUrl": "https://c15.radioboss.fm:8388/stream"
     }
   ]
 }
