@@ -1,19 +1,59 @@
 {
-  "version": 5,
-  "updatedAt": "2026-01-29",
+  "version": 7,
+  "updatedAt": "2026-02-05",
   "provider": "radioboss.fm",
   "channels": [
-    { "name": "00_MUSICA_POPULAR", "pageUrl": "https://c11.radioboss.fm/u/282" },
-    { "name": "00 TROPICAL", "pageUrl": "https://c15.radioboss.fm/u/273" },
-    { "name": "00_ADULTO_CONTEMPORANEO", "pageUrl": "https://c15.radioboss.fm/u/272" },
-    { "name": "AMARILO", "pageUrl": "https://c9.radioboss.fm/u/90" },
-    { "name": "MOTOAMERICANA", "pageUrl": "https://c9.radioboss.fm/u/87" },
-    { "name": "ALMACENES_MAXIMO", "pageUrl": "https://c38.radioboss.fm/u/216" },
-    { "name": "00_CHILLOUT", "pageUrl": "https://c2.radioboss.fm/u/241" },
-    { "name": "00_CLASICO", "pageUrl": "https://c13.radioboss.fm/u/411" },
-    { "name": "00_CRISTIANO", "pageUrl": "https://c13.radioboss.fm/u/401" },
-    { "name": "00_CROSSOVER", "pageUrl": "https://c15.radioboss.fm/u/274" },
-    { "name": "00_ELECTRONICO", "pageUrl": "https://c3.radioboss.fm/u/277" },
-    { "name": "DEMOS_PRODUCCION", "pageUrl": "https://c46.radioboss.fm/u/281" }
+    {
+      "name": "00_MUSICA_POPULAR",
+      "pageUrl": "https://c11.radioboss.fm/u/282"
+    },
+    {
+      "name": "00 TROPICAL",
+      "pageUrl": "https://c15.radioboss.fm/u/273"
+    },
+    {
+      "name": "00_ADULTO_CONTEMPORANEO",
+      "pageUrl": "https://c15.radioboss.fm/u/272"
+    },
+    {
+      "name": "AMARILO",
+      "pageUrl": "https://c9.radioboss.fm/u/90"
+    },
+    {
+      "name": "MOTOAMERICANA",
+      "pageUrl": "https://c9.radioboss.fm/u/87"
+    },
+    {
+      "name": "ALMACENES_MAXIMO",
+      "pageUrl": "https://c38.radioboss.fm/u/216"
+    },
+    {
+      "name": "00_CHILLOUT",
+      "pageUrl": "https://c2.radioboss.fm/u/241"
+    },
+    {
+      "name": "00_CLASICO",
+      "pageUrl": "https://c13.radioboss.fm/u/411"
+    },
+    {
+      "name": "00_CRISTIANO",
+      "pageUrl": "https://c13.radioboss.fm/u/401"
+    },
+    {
+      "name": "00_CROSSOVER",
+      "pageUrl": "https://c15.radioboss.fm/u/274"
+    },
+    {
+      "name": "00_ELECTRONICO",
+      "pageUrl": "https://c3.radioboss.fm/u/277"
+    },
+    {
+      "name": "DEMOS_PRODUCCION",
+      "pageUrl": "https://c46.radioboss.fm/u/281"
+    },
+    {
+      "name": "00_EVENTOS_2",
+      "pageUrl": "PEGAR_AQUI_PAGE_URL"
+    }
   ]
 }
