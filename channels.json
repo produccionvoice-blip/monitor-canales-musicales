@@ -54,6 +54,10 @@
     {
       "name": "00_EVENTOS_2",
       "pageUrl": "https://c15.radioboss.fm/u/388"
+    },
+    {
+      "name": "00 SMOOTH JAZZ Y BOSSA NOVA",
+      "streamUrl": "https://c15.radioboss.fm:18276/stream"
     }
   ]
 }
